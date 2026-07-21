@@ -4,16 +4,13 @@ if(isset($_POST['add_to_wishlist'])){
 
    if($user_id == ''){
       header('location:user_login.php');
+      exit();
    }else{
 
-      $pid = $_POST['pid'];
-      $pid = filter_var($pid, FILTER_SANITIZE_STRING);
-      $name = $_POST['name'];
-      $name = filter_var($name, FILTER_SANITIZE_STRING);
-      $price = $_POST['price'];
-      $price = filter_var($price, FILTER_SANITIZE_STRING);
-      $image = $_POST['image'];
-      $image = filter_var($image, FILTER_SANITIZE_STRING);
+      $pid = htmlspecialchars($_POST['pid'], ENT_QUOTES, 'UTF-8');
+      $name = htmlspecialchars($_POST['name'], ENT_QUOTES, 'UTF-8');
+      $price = htmlspecialchars($_POST['price'], ENT_QUOTES, 'UTF-8');
+      $image = htmlspecialchars($_POST['image'], ENT_QUOTES, 'UTF-8');
 
       $check_wishlist_numbers = $conn->prepare("SELECT * FROM `wishlist` WHERE name = ? AND user_id = ?");
       $check_wishlist_numbers->execute([$name, $user_id]);
@@ -39,18 +36,15 @@ if(isset($_POST['add_to_cart'])){
 
    if($user_id == ''){
       header('location:user_login.php');
+      exit();
    }else{
 
-      $pid = $_POST['pid'];
-      $pid = filter_var($pid, FILTER_SANITIZE_STRING);
-      $name = $_POST['name'];
-      $name = filter_var($name, FILTER_SANITIZE_STRING);
-      $price = $_POST['price'];
-      $price = filter_var($price, FILTER_SANITIZE_STRING);
-      $image = $_POST['image'];
-      $image = filter_var($image, FILTER_SANITIZE_STRING);
-      $qty = $_POST['qty'];
-      $qty = filter_var($qty, FILTER_SANITIZE_STRING);
+      // ✅ Modern PHP 8+ Sanitization replacing FILTER_SANITIZE_STRING
+      $pid = htmlspecialchars($_POST['pid'], ENT_QUOTES, 'UTF-8');
+      $name = htmlspecialchars($_POST['name'], ENT_QUOTES, 'UTF-8');
+      $price = htmlspecialchars($_POST['price'], ENT_QUOTES, 'UTF-8');
+      $image = htmlspecialchars($_POST['image'], ENT_QUOTES, 'UTF-8');
+      $qty = htmlspecialchars($_POST['qty'], ENT_QUOTES, 'UTF-8');
 
       $check_cart_numbers = $conn->prepare("SELECT * FROM `cart` WHERE name = ? AND user_id = ?");
       $check_cart_numbers->execute([$name, $user_id]);

@@ -1,0 +1,2349 @@
+/*====================================================
+
+ AGRIMART V2
+ Professional Marketplace UI
+ Inspired by Hamrobazar + FreshCart + Daraz
+
+======================================================*/
+
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+
+/*===================================
+ROOT VARIABLES
+====================================*/
+
+:root{
+
+    --primary:#16a34a;
+    --primary-dark:#15803d;
+    --primary-light:#dcfce7;
+
+    --secondary:#22c55e;
+
+    --accent:#f59e0b;
+
+    --danger:#ef4444;
+
+    --success:#22c55e;
+
+    --white:#ffffff;
+
+    --background:#f5f7fa;
+
+    --card:#ffffff;
+
+    --border:#e5e7eb;
+
+    --text:#111827;
+
+    --text-light:#6b7280;
+
+    --radius:14px;
+
+    --shadow-sm:
+    0 2px 8px rgba(0,0,0,.05);
+
+    --shadow:
+    0 10px 25px rgba(0,0,0,.08);
+
+    --shadow-lg:
+    0 20px 45px rgba(0,0,0,.12);
+
+    --transition:.30s ease;
+
+}
+
+
+/*===================================
+RESET
+====================================*/
+
+*{
+
+    margin:0;
+
+    padding:0;
+
+    box-sizing:border-box;
+
+    font-family:'Inter',sans-serif;
+
+}
+
+*::selection{
+
+    background:var(--primary);
+
+    color:#fff;
+
+}
+
+html{
+
+    font-size:62.5%;
+
+    scroll-behavior:smooth;
+
+    overflow-x:hidden;
+
+}
+
+body{
+
+    background:var(--background);
+
+    color:var(--text);
+
+    overflow-x:hidden;
+
+}
+
+section{
+
+    max-width:1400px;
+
+    margin:auto;
+
+    padding:4rem 2rem;
+
+}
+
+a{
+
+    text-decoration:none;
+
+    color:inherit;
+
+}
+
+ul{
+
+    list-style:none;
+
+}
+
+button{
+
+    cursor:pointer;
+
+}
+
+img{
+
+    display:block;
+
+    max-width:100%;
+
+}
+
+
+/*===================================
+SCROLLBAR
+====================================*/
+
+::-webkit-scrollbar{
+
+    width:8px;
+
+}
+
+::-webkit-scrollbar-track{
+
+    background:#edf2f7;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:var(--primary);
+
+    border-radius:100px;
+
+}
+
+
+/*===================================
+COMMON CLASSES
+====================================*/
+
+.heading{
+
+    text-align:center;
+
+    font-size:3.8rem;
+
+    font-weight:800;
+
+    margin-bottom:4rem;
+
+}
+
+.heading span{
+
+    color:var(--primary);
+
+}
+
+.empty{
+
+    background:white;
+
+    padding:5rem;
+
+    text-align:center;
+
+    border-radius:14px;
+
+    box-shadow:var(--shadow);
+
+    font-size:2rem;
+
+    color:#6b7280;
+
+}
+
+.disabled{
+
+    opacity:.5;
+
+    pointer-events:none;
+
+}
+
+
+/*===================================
+BUTTONS
+====================================*/
+
+.btn,
+.option-btn,
+.delete-btn{
+
+    display:inline-flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    padding:14px 28px;
+
+    border-radius:10px;
+
+    font-size:1.6rem;
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+.btn{
+
+    background:var(--primary);
+
+    color:white;
+
+}
+
+.btn:hover{
+
+    background:var(--primary-dark);
+
+    transform:translateY(-3px);
+
+}
+
+.option-btn{
+
+    background:#111827;
+
+    color:white;
+
+}
+
+.option-btn:hover{
+
+    background:#374151;
+
+}
+
+.delete-btn{
+
+    background:#ef4444;
+
+    color:white;
+
+}
+
+.delete-btn:hover{
+
+    background:#dc2626;
+
+}
+
+.flex-btn{
+
+    display:flex;
+
+    gap:1rem;
+
+}
+
+
+/*===================================
+HEADER
+====================================*/
+
+.header{
+
+    position:sticky;
+
+    top:0;
+
+    left:0;
+
+    width:100%;
+
+    background:white;
+
+    z-index:999;
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+.header .flex{
+
+    max-width:1400px;
+
+    margin:auto;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:16px 20px;
+
+}
+
+
+/*===================================
+LOGO
+====================================*/
+
+.logo{
+
+    font-size:3rem;
+
+    font-weight:800;
+
+    color:var(--primary);
+
+}
+
+.logo span{
+
+    color:#111827;
+
+}
+
+
+/*===================================
+SEARCH BAR
+====================================*/
+
+.search-bar{
+
+    width:550px;
+
+}
+
+.search-bar form{
+
+    display:flex;
+
+}
+
+.search-bar input{
+
+    width:100%;
+
+    height:48px;
+
+    background:#f3f4f6;
+
+    padding:0 18px;
+
+    font-size:1.5rem;
+
+    border-radius:8px 0 0 8px;
+
+}
+
+.search-bar button{
+
+    width:60px;
+
+    background:var(--primary);
+
+    color:white;
+
+    font-size:1.7rem;
+
+    border-radius:0 8px 8px 0;
+
+}
+
+
+/*===================================
+NAVBAR
+====================================*/
+
+.navbar{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:2.8rem;
+
+}
+
+.navbar a{
+
+    position:relative;
+
+    font-size:1.55rem;
+
+    font-weight:600;
+
+    color:#374151;
+
+    transition:.3s;
+
+}
+
+.navbar a::after{
+
+    content:"";
+
+    position:absolute;
+
+    bottom:-8px;
+
+    left:0;
+
+    width:0;
+
+    height:2px;
+
+    background:var(--primary);
+
+    transition:.3s;
+
+}
+
+.navbar a:hover{
+
+    color:var(--primary);
+
+}
+
+.navbar a:hover::after{
+
+    width:100%;
+
+}
+
+
+/*===================================
+HEADER ICONS
+====================================*/
+
+.icons{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+.icons>*{
+
+    width:44px;
+
+    height:44px;
+
+    border-radius:50%;
+
+    background:#f3f4f6;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    transition:.3s;
+
+    font-size:1.8rem;
+
+}
+
+.icons>*:hover{
+
+    background:var(--primary);
+
+    color:white;
+
+}
+
+.icons span{
+
+    font-size:1.4rem;
+
+    margin-left:5px;
+
+}
+
+
+/*===================================
+PROFILE DROPDOWN
+====================================*/
+
+.profile{
+
+    position:absolute;
+
+    top:120%;
+
+    right:15px;
+
+    width:320px;
+
+    background:white;
+
+    border-radius:14px;
+
+    box-shadow:var(--shadow);
+
+    padding:25px;
+
+    display:none;
+
+}
+
+.profile.active{
+
+    display:block;
+
+}
+
+.profile p{
+
+    font-size:1.6rem;
+
+    margin-bottom:15px;
+
+    color:#374151;
+
+}
+
+.profile .flex-btn{
+
+    margin-top:15px;
+
+}
+
+
+/*===================================
+MOBILE MENU
+====================================*/
+
+#menu-btn{
+
+    display:none;
+
+}
+
+/*======================================================
+HERO SECTION
+======================================================*/
+
+.home-bg{
+
+    background:#fff;
+
+    border-radius:0 0 25px 25px;
+
+    overflow:hidden;
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+.home{
+
+    padding:0;
+
+}
+
+.home .slide{
+
+    min-height:520px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:60px;
+
+    padding:60px;
+
+}
+
+.home .slide .content{
+
+    flex:1;
+
+}
+
+.home .slide .content span{
+
+    display:inline-block;
+
+    padding:8px 18px;
+
+    background:#dcfce7;
+
+    color:var(--primary);
+
+    border-radius:50px;
+
+    font-size:1.5rem;
+
+    font-weight:700;
+
+    margin-bottom:20px;
+
+}
+
+.home .slide .content h3{
+
+    font-size:5.4rem;
+
+    line-height:1.15;
+
+    font-weight:800;
+
+    color:var(--text);
+
+    margin-bottom:20px;
+
+}
+
+.home .slide .content p{
+
+    font-size:1.7rem;
+
+    color:var(--text-light);
+
+    line-height:1.8;
+
+    margin-bottom:35px;
+
+}
+
+.home .slide .content .btn{
+
+    padding:16px 36px;
+
+}
+
+.home .slide .image{
+
+    flex:1;
+
+}
+
+.home .slide .image img{
+
+    width:100%;
+
+    object-fit:contain;
+
+}
+
+
+/*======================================================
+CATEGORY SECTION
+======================================================*/
+
+.category{
+
+    margin-top:40px;
+
+}
+
+.category .box-container{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+
+    gap:25px;
+
+}
+
+.category .box{
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:30px;
+
+    text-align:center;
+
+    transition:.3s;
+
+    box-shadow:var(--shadow-sm);
+
+    cursor:pointer;
+
+    border:1px solid transparent;
+
+}
+
+.category .box:hover{
+
+    transform:translateY(-8px);
+
+    border-color:var(--primary);
+
+    box-shadow:var(--shadow);
+
+}
+
+.category .box img{
+
+    width:80px;
+
+    height:80px;
+
+    margin:auto;
+
+    margin-bottom:20px;
+
+}
+
+.category .box h3{
+
+    font-size:1.9rem;
+
+    color:var(--text);
+
+    margin-bottom:8px;
+
+}
+
+.category .box p{
+
+    font-size:1.4rem;
+
+    color:var(--text-light);
+
+}
+
+
+/*======================================================
+PRODUCT GRID
+======================================================*/
+
+.products .box-container{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+
+    gap:28px;
+
+}
+
+
+/*======================================================
+PRODUCT CARD
+======================================================*/
+
+.products .box{
+
+    background:white;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    position:relative;
+
+    transition:.35s;
+
+    box-shadow:var(--shadow-sm);
+
+    border:1px solid #f1f5f9;
+
+}
+
+.products .box:hover{
+
+    transform:translateY(-8px);
+
+    box-shadow:var(--shadow-lg);
+
+}
+
+
+/*======================================================
+PRODUCT IMAGE
+======================================================*/
+
+.products .box img{
+
+    width:100%;
+
+    height:240px;
+
+    object-fit:contain;
+
+    background:#fff;
+
+    padding:25px;
+
+}
+
+
+/*======================================================
+PRODUCT BADGES
+======================================================*/
+
+.badge{
+
+    position:absolute;
+
+    top:15px;
+
+    left:15px;
+
+    padding:6px 14px;
+
+    border-radius:30px;
+
+    font-size:1.2rem;
+
+    font-weight:700;
+
+    color:white;
+
+    z-index:5;
+
+}
+
+.badge.organic{
+
+    background:#16a34a;
+
+}
+
+.badge.sale{
+
+    background:#ef4444;
+
+}
+
+.badge.new{
+
+    background:#2563eb;
+
+}
+
+
+/*======================================================
+WISHLIST BUTTON
+======================================================*/
+
+.products .box .fa-heart{
+
+    position:absolute;
+
+    top:15px;
+
+    right:15px;
+
+    width:42px;
+
+    height:42px;
+
+    background:white;
+
+    border-radius:50%;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:1.7rem;
+
+    cursor:pointer;
+
+    box-shadow:var(--shadow-sm);
+
+    transition:.3s;
+
+}
+
+.products .box .fa-heart:hover{
+
+    background:#ef4444;
+
+    color:white;
+
+}
+
+
+/*======================================================
+QUICK VIEW BUTTON
+======================================================*/
+
+.products .box .fa-eye{
+
+    position:absolute;
+
+    top:65px;
+
+    right:15px;
+
+    width:42px;
+
+    height:42px;
+
+    background:white;
+
+    border-radius:50%;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:1.7rem;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+.products .box .fa-eye:hover{
+
+    background:var(--primary);
+
+    color:white;
+
+}
+
+
+/*======================================================
+PRODUCT CONTENT
+======================================================*/
+
+.products .box .content{
+
+    padding:20px;
+
+}
+
+.products .box .name{
+
+    font-size:1.9rem;
+
+    font-weight:700;
+
+    margin-bottom:10px;
+
+    color:#111827;
+
+    overflow:hidden;
+
+    white-space:nowrap;
+
+    text-overflow:ellipsis;
+
+}
+
+
+/*======================================================
+FARMER NAME
+======================================================*/
+
+.products .box .farmer{
+
+    font-size:1.4rem;
+
+    color:var(--text-light);
+
+    margin-bottom:10px;
+
+}
+
+
+/*======================================================
+RATING
+======================================================*/
+
+.rating{
+
+    display:flex;
+
+    gap:3px;
+
+    margin-bottom:15px;
+
+}
+
+.rating i{
+
+    color:#f59e0b;
+
+    font-size:1.4rem;
+
+}
+
+
+/*======================================================
+PRICE AREA
+======================================================*/
+
+.products .box .price{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin:18px 0;
+
+}
+
+.products .box .price h2{
+
+    color:var(--primary);
+
+    font-size:2.3rem;
+
+    font-weight:800;
+
+}
+
+.products .box .price del{
+
+    color:#9ca3af;
+
+    font-size:1.5rem;
+
+}
+
+
+/*======================================================
+QUANTITY
+======================================================*/
+
+.products .box .qty{
+
+    width:100%;
+
+    border:1px solid var(--border);
+
+    border-radius:10px;
+
+    padding:12px;
+
+    margin-bottom:15px;
+
+    font-size:1.5rem;
+
+}
+
+
+/*======================================================
+ADD TO CART
+======================================================*/
+
+.products .box .btn{
+
+    width:100%;
+
+}
+
+
+/*======================================================
+PRODUCT HOVER EFFECT
+======================================================*/
+
+.products .box:hover img{
+
+    transform:scale(1.05);
+
+}
+
+.products .box img{
+
+    transition:.4s;
+
+}
+
+
+/*======================================================
+FEATURE BOXES
+======================================================*/
+
+.features{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:25px;
+
+    margin-top:50px;
+
+}
+
+.features .feature{
+
+    background:white;
+
+    border-radius:16px;
+
+    padding:30px;
+
+    text-align:center;
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+.features .feature i{
+
+    font-size:4rem;
+
+    color:var(--primary);
+
+    margin-bottom:20px;
+
+}
+
+.features .feature h3{
+
+    font-size:1.8rem;
+
+    margin-bottom:10px;
+
+}
+
+.features .feature p{
+
+    font-size:1.5rem;
+
+    color:var(--text-light);
+
+}
+/*======================================================
+QUICK VIEW
+======================================================*/
+
+.quick-view{
+
+    padding-top:3rem;
+
+}
+
+.quick-view form{
+
+    background:var(--card);
+
+    border-radius:18px;
+
+    box-shadow:var(--shadow);
+
+    padding:3rem;
+
+}
+
+.quick-view .row{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:4rem;
+
+    align-items:flex-start;
+
+}
+
+.quick-view .image-container{
+
+    flex:1 1 42rem;
+
+}
+
+.quick-view .main-image{
+
+    background:#fff;
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    padding:2rem;
+
+}
+
+.quick-view .main-image img{
+
+    width:100%;
+
+    height:420px;
+
+    object-fit:contain;
+
+}
+
+.quick-view .sub-image{
+
+    display:flex;
+
+    gap:1rem;
+
+    margin-top:2rem;
+
+}
+
+.quick-view .sub-image img{
+
+    width:90px;
+
+    height:90px;
+
+    object-fit:cover;
+
+    border-radius:12px;
+
+    border:2px solid transparent;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.quick-view .sub-image img:hover{
+
+    border-color:var(--primary);
+
+}
+
+.quick-view .content{
+
+    flex:1 1 42rem;
+
+}
+
+.quick-view .name{
+
+    font-size:3.2rem;
+
+    font-weight:700;
+
+    margin-bottom:1rem;
+
+}
+
+.quick-view .price{
+
+    font-size:3rem;
+
+    color:var(--primary);
+
+    font-weight:800;
+
+    margin:2rem 0;
+
+}
+
+.quick-view .details{
+
+    font-size:1.6rem;
+
+    line-height:1.9;
+
+    color:var(--text-light);
+
+    margin-bottom:2rem;
+
+}
+
+.quick-view .flex{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:1rem;
+
+    margin:2rem 0;
+
+}
+
+.quick-view .qty{
+
+    width:120px;
+
+    padding:1.3rem;
+
+    border:1px solid var(--border);
+
+    border-radius:10px;
+
+    font-size:1.6rem;
+
+}
+
+/*======================================================
+FORMS
+======================================================*/
+
+.form-container{
+
+    min-height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    padding:4rem 2rem;
+
+}
+
+.form-container form{
+
+    width:100%;
+
+    max-width:460px;
+
+    background:#fff;
+
+    border-radius:18px;
+
+    padding:4rem;
+
+    box-shadow:var(--shadow);
+
+}
+
+.form-container h3{
+
+    font-size:3rem;
+
+    margin-bottom:2rem;
+
+    text-align:center;
+
+}
+
+.form-container p{
+
+    font-size:1.5rem;
+
+    color:var(--text-light);
+
+    text-align:center;
+
+    margin-top:2rem;
+
+}
+
+.box{
+
+    width:100%;
+
+    background:#f8fafc;
+
+    border:1px solid var(--border);
+
+    border-radius:10px;
+
+    padding:1.5rem;
+
+    font-size:1.6rem;
+
+    margin:1rem 0;
+
+    transition:.3s;
+
+}
+
+.box:focus{
+
+    border-color:var(--primary);
+
+    background:#fff;
+
+}
+
+/*======================================================
+CONTACT
+======================================================*/
+
+.contact form{
+
+    max-width:700px;
+
+    margin:auto;
+
+    background:white;
+
+    padding:3rem;
+
+    border-radius:18px;
+
+    box-shadow:var(--shadow);
+
+}
+
+.contact textarea{
+
+    resize:none;
+
+    height:180px;
+
+}
+
+/*======================================================
+SHOPPING CART
+======================================================*/
+
+.shopping-cart .box-container{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+
+    gap:25px;
+
+}
+
+.shopping-cart .box{
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:2rem;
+
+    box-shadow:var(--shadow-sm);
+
+    transition:.3s;
+
+}
+
+.shopping-cart .box:hover{
+
+    box-shadow:var(--shadow);
+
+}
+
+.shopping-cart .box img{
+
+    width:100%;
+
+    height:220px;
+
+    object-fit:contain;
+
+    margin-bottom:1.5rem;
+
+}
+
+.shopping-cart .name{
+
+    font-size:2rem;
+
+    font-weight:700;
+
+}
+
+.shopping-cart .price{
+
+    color:var(--primary);
+
+    font-size:2.4rem;
+
+    font-weight:700;
+
+    margin:1rem 0;
+
+}
+
+.shopping-cart .qty{
+
+    width:100%;
+
+    border:1px solid var(--border);
+
+    border-radius:10px;
+
+    padding:1.2rem;
+
+    margin-bottom:1rem;
+
+}
+
+.shopping-cart .sub-total{
+
+    margin-top:1.5rem;
+
+    font-size:1.7rem;
+
+}
+
+.shopping-cart .sub-total span{
+
+    color:var(--primary);
+
+    font-weight:700;
+
+}
+
+/*======================================================
+TOTAL BOX
+======================================================*/
+
+.cart-total,
+.wishlist-total{
+
+    max-width:500px;
+
+    margin:4rem auto;
+
+    background:white;
+
+    padding:3rem;
+
+    border-radius:18px;
+
+    box-shadow:var(--shadow);
+
+    text-align:center;
+
+}
+
+.cart-total p,
+.wishlist-total p{
+
+    font-size:2.3rem;
+
+    margin-bottom:2rem;
+
+}
+
+.cart-total span,
+.wishlist-total span{
+
+    color:var(--primary);
+
+    font-weight:800;
+
+}
+
+/*======================================================
+SEARCH BAR PAGE
+======================================================*/
+
+.search-form{
+
+    margin-bottom:5rem;
+
+}
+
+.search-form form{
+
+    display:flex;
+
+    max-width:800px;
+
+    margin:auto;
+
+}
+
+.search-form input{
+
+    width:100%;
+
+    height:58px;
+
+    padding:0 2rem;
+
+    border:1px solid var(--border);
+
+    border-radius:12px 0 0 12px;
+
+    font-size:1.6rem;
+
+}
+
+.search-form button{
+
+    width:70px;
+
+    background:var(--primary);
+
+    color:white;
+
+    border-radius:0 12px 12px 0;
+
+    font-size:2rem;
+
+}
+
+/*======================================================
+ALERT MESSAGE
+======================================================*/
+
+.message{
+
+    max-width:1200px;
+
+    margin:1rem auto;
+
+    padding:1.8rem 2rem;
+
+    background:#dcfce7;
+
+    color:#166534;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    border-radius:12px;
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+.message span{
+
+    font-size:1.6rem;
+
+    font-weight:600;
+
+}
+
+.message i{
+
+    cursor:pointer;
+
+    font-size:2rem;
+
+}
+
+/*======================================================
+PAGINATION
+======================================================*/
+
+.pagination{
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:1rem;
+
+    margin:5rem 0;
+
+}
+
+.pagination a{
+
+    width:45px;
+
+    height:45px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    border-radius:10px;
+
+    background:white;
+
+    box-shadow:var(--shadow-sm);
+
+    transition:.3s;
+
+    font-size:1.6rem;
+
+}
+
+.pagination a:hover{
+
+    background:var(--primary);
+
+    color:white;
+
+}
+
+.pagination .active{
+
+    background:var(--primary);
+
+    color:white;
+
+}
+/*======================================================
+CHECKOUT
+======================================================*/
+
+.checkout-orders{
+
+    padding:4rem 2rem;
+
+}
+
+.checkout-orders form{
+
+    max-width:900px;
+
+    margin:auto;
+
+    background:var(--card);
+
+    border-radius:18px;
+
+    padding:3rem;
+
+    box-shadow:var(--shadow);
+
+}
+
+.checkout-orders h3{
+
+    font-size:2.8rem;
+
+    text-align:center;
+
+    margin-bottom:3rem;
+
+}
+
+.checkout-orders .flex{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+
+    gap:2rem;
+
+}
+
+.checkout-orders .inputBox{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.checkout-orders .inputBox span{
+
+    font-size:1.5rem;
+
+    margin-bottom:.8rem;
+
+    color:var(--text-light);
+
+    font-weight:600;
+
+}
+
+.checkout-orders .inputBox .box{
+
+    background:#fff;
+
+}
+
+
+/*======================================================
+DISPLAY ORDERS
+======================================================*/
+
+.display-orders{
+
+    margin-bottom:3rem;
+
+}
+
+.display-orders p{
+
+    background:#f8fafc;
+
+    border:1px solid var(--border);
+
+    border-radius:12px;
+
+    padding:1.2rem 1.6rem;
+
+    margin:.8rem;
+
+    display:inline-block;
+
+    font-size:1.5rem;
+
+}
+
+.display-orders span{
+
+    color:var(--primary);
+
+    font-weight:700;
+
+}
+
+.grand-total{
+
+    text-align:center;
+
+    font-size:2.6rem;
+
+    margin-top:2rem;
+
+    font-weight:800;
+
+}
+
+.grand-total span{
+
+    color:var(--primary);
+
+}
+
+
+/*======================================================
+ORDERS
+======================================================*/
+
+.orders .box-container{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+
+    gap:2rem;
+
+}
+
+.orders .box{
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:2.5rem;
+
+    box-shadow:var(--shadow-sm);
+
+    transition:.3s;
+
+}
+
+.orders .box:hover{
+
+    box-shadow:var(--shadow);
+
+    transform:translateY(-5px);
+
+}
+
+.orders .box p{
+
+    font-size:1.6rem;
+
+    line-height:2;
+
+    color:var(--text-light);
+
+}
+
+.orders .box p span{
+
+    color:var(--text);
+
+    font-weight:600;
+
+}
+
+
+/*======================================================
+PROFILE CARD
+======================================================*/
+
+.profile-card{
+
+    max-width:500px;
+
+    margin:auto;
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:3rem;
+
+    box-shadow:var(--shadow);
+
+    text-align:center;
+
+}
+
+.profile-card img{
+
+    width:120px;
+
+    height:120px;
+
+    border-radius:50%;
+
+    object-fit:cover;
+
+    margin:auto;
+
+    margin-bottom:2rem;
+
+}
+
+.profile-card h2{
+
+    font-size:2.4rem;
+
+    margin-bottom:1rem;
+
+}
+
+.profile-card p{
+
+    font-size:1.6rem;
+
+    color:var(--text-light);
+
+}
+
+
+/*======================================================
+DASHBOARD
+======================================================*/
+
+.dashboard{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+
+    gap:2rem;
+
+}
+
+.dashboard .card{
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:2.5rem;
+
+    box-shadow:var(--shadow-sm);
+
+    transition:.3s;
+
+}
+
+.dashboard .card:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:var(--shadow);
+
+}
+
+.dashboard .card i{
+
+    font-size:4rem;
+
+    color:var(--primary);
+
+    margin-bottom:2rem;
+
+}
+
+.dashboard .card h3{
+
+    font-size:3rem;
+
+    margin-bottom:1rem;
+
+}
+
+.dashboard .card p{
+
+    font-size:1.5rem;
+
+    color:var(--text-light);
+
+}
+
+
+/*======================================================
+TABLES
+======================================================*/
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    background:white;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    box-shadow:var(--shadow);
+
+}
+
+table thead{
+
+    background:var(--primary);
+
+    color:white;
+
+}
+
+table th{
+
+    padding:18px;
+
+    font-size:1.6rem;
+
+}
+
+table td{
+
+    padding:18px;
+
+    font-size:1.5rem;
+
+    border-bottom:1px solid var(--border);
+
+}
+
+table tbody tr:hover{
+
+    background:#f8fafc;
+
+}
+
+
+/*======================================================
+FOOTER
+======================================================*/
+
+.footer{
+
+    background:white;
+
+    margin-top:6rem;
+
+    border-top:1px solid var(--border);
+
+}
+
+.footer .grid{
+
+    max-width:1400px;
+
+    margin:auto;
+
+    padding:5rem 2rem;
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+
+    gap:3rem;
+
+}
+
+.footer .box h3{
+
+    font-size:2rem;
+
+    margin-bottom:2rem;
+
+}
+
+.footer .box a{
+
+    display:block;
+
+    margin:1rem 0;
+
+    font-size:1.5rem;
+
+    color:var(--text-light);
+
+    transition:.3s;
+
+}
+
+.footer .box a:hover{
+
+    color:var(--primary);
+
+    padding-left:8px;
+
+}
+
+.footer .box a i{
+
+    color:var(--primary);
+
+    margin-right:8px;
+
+}
+
+.footer .credit{
+
+    text-align:center;
+
+    padding:2.5rem;
+
+    border-top:1px solid var(--border);
+
+    font-size:1.5rem;
+
+    color:var(--text-light);
+
+}
+
+.footer .credit span{
+
+    color:var(--primary);
+
+    font-weight:700;
+
+}
+
+
+/*======================================================
+LOADING ANIMATION
+======================================================*/
+
+.fade-up{
+
+    animation:fadeUp .6s ease;
+
+}
+
+@keyframes fadeUp{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(30px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+.zoom{
+
+    animation:zoom .5s ease;
+
+}
+
+@keyframes zoom{
+
+    from{
+
+        transform:scale(.9);
+
+        opacity:0;
+
+    }
+
+    to{
+
+        transform:scale(1);
+
+        opacity:1;
+
+    }
+
+}
+
+
+/*======================================================
+RESPONSIVE
+======================================================*/
+
+@media(max-width:1200px){
+
+    .search-bar{
+
+        width:400px;
+
+    }
+
+}
+
+@media(max-width:991px){
+
+    html{
+
+        font-size:55%;
+
+    }
+
+    .home .slide{
+
+        flex-direction:column;
+
+        text-align:center;
+
+    }
+
+    .features{
+
+        grid-template-columns:repeat(2,1fr);
+
+    }
+
+}
+
+@media(max-width:768px){
+
+    #menu-btn{
+
+        display:flex;
+
+    }
+
+    .navbar{
+
+        position:absolute;
+
+        top:100%;
+
+        left:0;
+
+        right:0;
+
+        background:white;
+
+        flex-direction:column;
+
+        display:none;
+
+        box-shadow:var(--shadow);
+
+        padding:2rem;
+
+    }
+
+    .navbar.active{
+
+        display:flex;
+
+    }
+
+    .search-bar{
+
+        display:none;
+
+    }
+
+    .footer .grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .features{
+
+        grid-template-columns:1fr;
+
+    }
+
+}
+
+@media(max-width:450px){
+
+    html{
+
+        font-size:50%;
+
+    }
+
+    .flex-btn{
+
+        flex-direction:column;
+
+    }
+
+    .products .box-container{
+
+        grid-template-columns:1fr;
+
+    }
+
+}

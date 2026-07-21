@@ -9,22 +9,29 @@ if(isset($_SESSION['user_id'])){
 }else{
    $user_id = '';
    header('location:user_login.php');
+   exit();
 };
 
 if(isset($_POST['order'])){
 
-   $name = $_POST['name'];
-   $name = filter_var($name, FILTER_SANITIZE_STRING);
-   $number = $_POST['number'];
-   $number = filter_var($number, FILTER_SANITIZE_STRING);
-   $email = $_POST['email'];
-   $email = filter_var($email, FILTER_SANITIZE_STRING);
-   $method = $_POST['method'];
-   $method = filter_var($method, FILTER_SANITIZE_STRING);
-   $address = 'flat no. '. $_POST['flat'] .', '. $_POST['street'] .', '. $_POST['city'] .', '. $_POST['state'] .', '. $_POST['country'] .' - '. $_POST['pin_code'];
-   $address = filter_var($address, FILTER_SANITIZE_STRING);
-   $total_products = $_POST['total_products'];
-   $total_price = $_POST['total_price'];
+   // ✅ Modern PHP 8+ Sanitization
+   $name = htmlspecialchars($_POST['name'], ENT_QUOTES, 'UTF-8');
+   $number = htmlspecialchars($_POST['number'], ENT_QUOTES, 'UTF-8');
+   $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+   $method = htmlspecialchars($_POST['method'], ENT_QUOTES, 'UTF-8');
+   
+   // Sanitize address components
+   $flat = htmlspecialchars($_POST['flat'], ENT_QUOTES, 'UTF-8');
+   $street = htmlspecialchars($_POST['street'], ENT_QUOTES, 'UTF-8');
+   $city = htmlspecialchars($_POST['city'], ENT_QUOTES, 'UTF-8');
+   $state = htmlspecialchars($_POST['state'], ENT_QUOTES, 'UTF-8');
+   $country = htmlspecialchars($_POST['country'], ENT_QUOTES, 'UTF-8');
+   $pin_code = htmlspecialchars($_POST['pin_code'], ENT_QUOTES, 'UTF-8');
+
+   $address = 'flat no. '. $flat .', '. $street .', '. $city .', '. $state .', '. $country .' - '. $pin_code;
+   
+   $total_products = htmlspecialchars($_POST['total_products'], ENT_QUOTES, 'UTF-8');
+   $total_price = htmlspecialchars($_POST['total_price'], ENT_QUOTES, 'UTF-8');
 
    $check_cart = $conn->prepare("SELECT * FROM `cart` WHERE user_id = ?");
    $check_cart->execute([$user_id]);
@@ -74,7 +81,8 @@ if(isset($_POST['order'])){
       <div class="display-orders">
       <?php
          $grand_total = 0;
-         $cart_items[] = '';
+         $total_products = '';
+         $cart_items = [];
          $select_cart = $conn->prepare("SELECT * FROM `cart` WHERE user_id = ?");
          $select_cart->execute([$user_id]);
          if($select_cart->rowCount() > 0){
@@ -83,7 +91,7 @@ if(isset($_POST['order'])){
                $total_products = implode($cart_items);
                $grand_total += ($fetch_cart['price'] * $fetch_cart['quantity']);
       ?>
-         <p> <?= $fetch_cart['name']; ?> <span>(<?= '$'.$fetch_cart['price'].'/- x '. $fetch_cart['quantity']; ?>)</span> </p>
+         <p> <?= $fetch_cart['name']; ?> <span>(<?= 'NRs '.$fetch_cart['price'].'/- x '. $fetch_cart['quantity']; ?>)</span> </p>
       <?php
             }
          }else{
@@ -91,8 +99,8 @@ if(isset($_POST['order'])){
          }
       ?>
          <input type="hidden" name="total_products" value="<?= $total_products; ?>">
-         <input type="hidden" name="total_price" value="<?= $grand_total; ?>" value="">
-         <div class="grand-total">grand total : <span>$<?= $grand_total; ?>/-</span></div>
+         <input type="hidden" name="total_price" value="<?= $grand_total; ?>">
+         <div class="grand-total">grand total : <span>NRs <?= $grand_total; ?>/-</span></div>
       </div>
 
       <h3>place your orders</h3>
@@ -114,18 +122,17 @@ if(isset($_POST['order'])){
             <span>payment method :</span>
             <select name="method" class="box" required>
                <option value="cash on delivery">cash on delivery</option>
-               <option value="credit card">credit card</option>
-               <option value="paytm">paytm</option>
-               <option value="paypal">paypal</option>
+               <option value="esewa">eSewa</option>
+               <option value="khalti">Khalti</option>
             </select>
          </div>
          <div class="inputBox">
             <span>address line 01 :</span>
-            <input type="text" name="flat" placeholder="e.g. flat number" class="box" maxlength="50" required>
+            <input type="text" name="flat" placeholder="e.g. flat / house number" class="box" maxlength="50" required>
          </div>
          <div class="inputBox">
             <span>address line 02 :</span>
-            <input type="text" name="street" placeholder="e.g. street name" class="box" maxlength="50" required>
+            <input type="text" name="street" placeholder="e.g. street name / ward no" class="box" maxlength="50" required>
          </div>
          <div class="inputBox">
             <span>city :</span>
@@ -141,7 +148,7 @@ if(isset($_POST['order'])){
          </div>
          <div class="inputBox">
             <span>pin code :</span>
-            <input type="number" min="0" name="pin_code" placeholder="e.g. 123456" min="0" max="999999" onkeypress="if(this.value.length == 6) return false;" class="box" required>
+            <input type="number" min="0" name="pin_code" placeholder="e.g. 33700" min="0" max="999999" onkeypress="if(this.value.length == 6) return false;" class="box" required>
          </div>
       </div>
 
@@ -150,18 +157,6 @@ if(isset($_POST['order'])){
    </form>
 
 </section>
-
-
-
-
-
-
-
-
-
-
-
-
 
 <?php include 'components/footer.php'; ?>
 
