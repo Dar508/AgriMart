@@ -6,11 +6,16 @@ session_start();
 
 if(isset($_SESSION['user_id'])){
    $user_id = $_SESSION['user_id'];
-   // Fetch user role tier from database to check pricing rules
-   $select_user_type = $conn->prepare("SELECT user_type FROM `users` WHERE id = ?");
-   $select_user_type->execute([$user_id]);
-   $fetch_user_type = $select_user_type->fetch(PDO::FETCH_ASSOC);
-   $user_type = $fetch_user_type ? $fetch_user_type['user_type'] : 'user';
+   
+   // Safely query user_type in case column exists, otherwise fall back gracefully
+   try {
+      $select_user_type = $conn->prepare("SELECT user_type FROM `users` WHERE id = ?");
+      $select_user_type->execute([$user_id]);
+      $fetch_user_type = $select_user_type->fetch(PDO::FETCH_ASSOC);
+      $user_type = ($fetch_user_type && isset($fetch_user_type['user_type'])) ? $fetch_user_type['user_type'] : 'user';
+   } catch (PDOException $e) {
+      $user_type = 'user'; // Fallback if user_type column isn't created yet
+   }
 }else{
    $user_id = '';
    $user_type = 'user'; // Non-logged-in guest visitors default to retail tier
@@ -45,26 +50,30 @@ include 'components/wishlist_cart.php';
    <div class="swiper-wrapper">
 
    <?php
-      // Fetches live slider entries managed from your admin panel
-      $select_slider = $conn->prepare("SELECT * FROM `slider`");
-      $select_slider->execute();
-      if($select_slider->rowCount() > 0){
-         while($fetch_slide = $select_slider->fetch(PDO::FETCH_ASSOC)){
-   ?>
-      <div class="swiper-slide slide">
-         <div class="image">
-            <img src="images/<?= $fetch_slide['image']; ?>" alt="">
+      // Safely fetch slider entries, fallback if table doesn't exist
+      try {
+         $select_slider = $conn->prepare("SELECT * FROM `slider`");
+         $select_slider->execute();
+         if($select_slider->rowCount() > 0){
+            while($fetch_slide = $select_slider->fetch(PDO::FETCH_ASSOC)){
+      ?>
+         <div class="swiper-slide slide">
+            <div class="image">
+               <img src="images/<?= $fetch_slide['image']; ?>" alt="">
+            </div>
+            <div class="content">
+               <span><?= $fetch_slide['sub_heading']; ?></span>
+               <h3><?= $fetch_slide['heading']; ?></h3>
+               <a href="shop.php" class="btn">shop now</a>
+            </div>
          </div>
-         <div class="content">
-            <span><?= $fetch_slide['sub_heading']; ?></span>
-            <h3><?= $fetch_slide['heading']; ?></h3>
-            <a href="shop.php" class="btn">shop now</a>
-         </div>
-      </div>
-   <?php
+      <?php
+            }
+         }else{
+            echo '<p class="empty" style="text-align: center; font-size: 2rem; width: 100%; padding: 2rem;">No promotional banner campaigns active.</p>';
          }
-      }else{
-         echo '<p class="empty" style="text-align: center; font-size: 2rem; width: 100%; padding: 2rem;">No promotional banner campaigns active.</p>';
+      } catch (PDOException $e) {
+         echo '<p class="empty" style="text-align: center; font-size: 2rem; width: 100%; padding: 2rem;">Welcome to AgriMart Fresh Produce Market</p>';
       }
    ?>
 
@@ -86,19 +95,19 @@ include 'components/wishlist_cart.php';
 
    <div class="swiper-wrapper">
 
-   <!-- Fruits Section with Apple/Fruit Icon -->
+   <!-- Fruits Section -->
    <a href="category.php?category=fruits" class="swiper-slide slide" style="text-align: center; padding: 2rem;">
       <i class="fas fa-apple-alt" style="font-size: 4.5rem; color: #e74c3c; margin-bottom: 1rem; display: block;"></i>
       <h3>Fruits</h3>
    </a>
 
-   <!-- Vegetables Section with Carrot/Veggie Icon -->
+   <!-- Vegetables Section -->
    <a href="category.php?category=vegetables" class="swiper-slide slide" style="text-align: center; padding: 2rem;">
       <i class="fas fa-carrot" style="font-size: 4.5rem; color: #e67e22; margin-bottom: 1rem; display: block;"></i>
       <h3>Vegetables</h3>
    </a>
 
-   <!-- Grains & Staples Section with Wheat/Seedling Icon -->
+   <!-- Grains & Staples Section -->
    <a href="category.php?category=grains" class="swiper-slide slide" style="text-align: center; padding: 2rem;">
       <i class="fas fa-seedling" style="font-size: 4.5rem; color: #27ae60; margin-bottom: 1rem; display: block;"></i>
       <h3>Grains & Staples</h3>
@@ -126,10 +135,13 @@ include 'components/wishlist_cart.php';
      if($select_products->rowCount() > 0){
       while($fetch_product = $select_products->fetch(PDO::FETCH_ASSOC)){
          
-         // Dynamically route display parameters according to consumer accounts
+         // Safely handle wholesale/supplier tier column check
+         $supplier_price = isset($fetch_product['supplier_price']) ? $fetch_product['supplier_price'] : $fetch_product['price'];
+         $min_supplier_qty = isset($fetch_product['min_supplier_qty']) ? $fetch_product['min_supplier_qty'] : 1;
+
          if($user_type == 'supplier'){
-            $display_price = $fetch_product['supplier_price'];
-            $min_qty = $fetch_product['min_supplier_qty'];
+            $display_price = $supplier_price;
+            $min_qty = $min_supplier_qty;
             $badge = '<span class="badge" style="color: green; font-size: 1.2rem; display: block; margin-top: .5rem;">Wholesale Bulk Tier</span>';
          } else {
             $display_price = $fetch_product['price'];
@@ -149,7 +161,7 @@ include 'components/wishlist_cart.php';
       
       <div class="name"><?= $fetch_product['name']; ?> <?= $badge; ?></div>
       <div class="flex">
-         <div class="price"><span>NRS</span><?= $display_price; ?><span>/kg</span></div>
+         <div class="price"><span>NRS </span><?= $display_price; ?><span>/kg</span></div>
          <input type="number" name="qty" class="qty" min="<?= $min_qty; ?>" max="999" onkeypress="if(this.value.length == 4) return false;" value="<?= $min_qty; ?>">
       </div>
       <input type="submit" value="add to cart" class="btn" name="add_to_cart">
@@ -184,7 +196,7 @@ var swiper = new Swiper(".home-slider", {
     },
 });
 
- var swiper = new Swiper(".category-slider", {
+var swiper = new Swiper(".category-slider", {
    loop:true,
    spaceBetween: 20,
    pagination: {

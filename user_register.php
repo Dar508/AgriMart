@@ -12,17 +12,19 @@ if(isset($_SESSION['user_id'])){
 
 if(isset($_POST['submit'])){
 
-   $name = $_POST['name'];
-   $name = filter_var($name, FILTER_SANITIZE_STRING);
-   $email = $_POST['email'];
-   $email = filter_var($email, FILTER_SANITIZE_STRING);
-   $pass = sha1($_POST['pass']);
-   $pass = filter_var($pass, FILTER_SANITIZE_STRING);
-   $cpass = sha1($_POST['cpass']);
-   $cpass = filter_var($cpass, FILTER_SANITIZE_STRING);
+   // ✅ Updated sanitization for PHP 8+
+   $name = htmlspecialchars($_POST['name'], ENT_QUOTES, 'UTF-8');
+   $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+   
+   // Sanitize passwords prior to hashing
+   $raw_pass = htmlspecialchars($_POST['pass'], ENT_QUOTES, 'UTF-8');
+   $raw_cpass = htmlspecialchars($_POST['cpass'], ENT_QUOTES, 'UTF-8');
+   
+   $pass = sha1($raw_pass);
+   $cpass = sha1($raw_cpass);
 
    $select_user = $conn->prepare("SELECT * FROM `users` WHERE email = ?");
-   $select_user->execute([$email,]);
+   $select_user->execute([$email]);
    $row = $select_user->fetch(PDO::FETCH_ASSOC);
 
    if($select_user->rowCount() > 0){
@@ -74,18 +76,6 @@ if(isset($_POST['submit'])){
    </form>
 
 </section>
-
-
-
-
-
-
-
-
-
-
-
-
 
 <?php include 'components/footer.php'; ?>
 

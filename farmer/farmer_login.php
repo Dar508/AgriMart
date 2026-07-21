@@ -14,9 +14,10 @@ if(isset($_GET['action']) && $_GET['action'] == 'logout'){
 
 if(isset($_POST['submit'])){
 
-   $email = filter_var($_POST['email'], FILTER_SANITIZE_STRING);
-   $pass = md5($_POST['pass']);
-   $pass = filter_var($pass, FILTER_SANITIZE_STRING);
+   // ✅ Modern PHP 8+ Sanitization
+   $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+   $raw_pass = htmlspecialchars($_POST['pass'], ENT_QUOTES, 'UTF-8');
+   $pass = md5($raw_pass);
 
    $select_farmer = $conn->prepare("SELECT * FROM `farmers` WHERE email = ? AND password = ?");
    $select_farmer->execute([$email, $pass]);

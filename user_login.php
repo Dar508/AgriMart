@@ -12,10 +12,12 @@ if(isset($_SESSION['user_id'])){
 
 if(isset($_POST['submit'])){
 
-   $email = $_POST['email'];
-   $email = filter_var($email, FILTER_SANITIZE_STRING);
-   $pass = sha1($_POST['pass']);
-   $pass = filter_var($pass, FILTER_SANITIZE_STRING);
+   // ✅ Modern PHP 8+ Sanitization
+   $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+   
+   // Sanitize raw password input before hashing
+   $raw_pass = htmlspecialchars($_POST['pass'], ENT_QUOTES, 'UTF-8');
+   $pass = sha1($raw_pass);
 
    $select_user = $conn->prepare("SELECT * FROM `users` WHERE email = ? AND password = ?");
    $select_user->execute([$email, $pass]);
@@ -24,6 +26,7 @@ if(isset($_POST['submit'])){
    if($select_user->rowCount() > 0){
       $_SESSION['user_id'] = $row['id'];
       header('location:home.php');
+      exit();
    }else{
       $message[] = 'incorrect username or password!';
    }
@@ -63,18 +66,6 @@ if(isset($_POST['submit'])){
    </form>
 
 </section>
-
-
-
-
-
-
-
-
-
-
-
-
 
 <?php include 'components/footer.php'; ?>
 
