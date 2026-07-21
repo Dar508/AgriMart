@@ -1,29 +1,29 @@
 <?php
-   if(isset($message)){
-      foreach($message as $message){
-         echo '
-         <div class="message">
-            <span>'.$message.'</span>
-            <i class="fas fa-times" onclick="this.parentElement.remove();"></i>
-         </div>
-         ';
-      }
+if (isset($message)) {
+   foreach ($message as $msg) {
+      echo '
+      <div class="message">
+         <span>' . htmlspecialchars($msg, ENT_QUOTES, 'UTF-8') . '</span>
+         <i class="fas fa-times" onclick="this.parentElement.remove();"></i>
+      </div>
+      ';
    }
+}
 ?>
 
 <header class="header">
 
    <section class="flex">
 
-      <a href="../admin/dashboard.php" class="logo">Admin<span>Panel</span></a>
+      <a href="dashboard.php" class="logo">Admin<span>Panel</span></a>
 
       <nav class="navbar">
-         <a href="../admin/dashboard.php">home</a>
-         <a href="../admin/products.php">products</a>
-         <a href="../admin/manage_slider.php">slider</a> <a href="../admin/placed_orders.php">orders</a>
-         <a href="../admin/admin_accounts.php">admins</a>
-         <a href="../admin/users_accounts.php">users</a>
-         <a href="../admin/messages.php">messages</a>
+         <a href="dashboard.php">Home</a>
+         <a href="manage_slider.php">Slider</a>
+         <a href="farmers_accounts.php">Farmers</a>
+         <a href="users_accounts.php">Users</a>
+         <a href="admin_accounts.php">Admins</a>
+         <a href="messages.php">Messages</a>
       </nav>
 
       <div class="icons">
@@ -37,13 +37,12 @@
             $select_profile->execute([$admin_id]);
             $fetch_profile = $select_profile->fetch(PDO::FETCH_ASSOC);
          ?>
-         <p><?= $fetch_profile['name']; ?></p>
-         <a href="../admin/update_profile.php" class="btn">update profile</a>
+         <p><?= htmlspecialchars($fetch_profile['name'] ?? 'Admin'); ?></p>
+         <a href="update_profile.php" class="btn">Update Profile</a>
          <div class="flex-btn">
-            <a href="../admin/register_admin.php" class="option-btn">register</a>
-            <a href="../admin/admin_login.php" class="option-btn">login</a>
+            <a href="register_admin.php" class="option-btn">Register Admin</a>
          </div>
-         <a href="../components/admin_logout.php" class="delete-btn" onclick="return confirm('logout from the website?');">logout</a> 
+         <a href="../components/admin_logout.php" class="delete-btn" onclick="return confirm('Logout from the website?');">Logout</a>
       </div>
 
    </section>

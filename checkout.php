@@ -4,51 +4,63 @@ include 'components/connect.php';
 
 session_start();
 
-if(isset($_SESSION['user_id'])){
-   $user_id = $_SESSION['user_id'];
-}else{
-   $user_id = '';
+$user_id = $_SESSION['user_id'] ?? '';
+
+if (empty($user_id)) {
    header('location:user_login.php');
    exit();
-};
+}
 
-if(isset($_POST['order'])){
+$message = [];
 
-   // ✅ Modern PHP 8+ Sanitization
-   $name = htmlspecialchars($_POST['name'], ENT_QUOTES, 'UTF-8');
-   $number = htmlspecialchars($_POST['number'], ENT_QUOTES, 'UTF-8');
-   $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
-   $method = htmlspecialchars($_POST['method'], ENT_QUOTES, 'UTF-8');
+if (isset($_POST['order'])) {
+
+   // Trim and validate raw input
+   $name     = trim($_POST['name'] ?? '');
+   $number   = trim($_POST['number'] ?? '');
+   $email    = filter_var(trim($_POST['email'] ?? ''), FILTER_VALIDATE_EMAIL);
+   $method   = trim($_POST['method'] ?? '');
    
-   // Sanitize address components
-   $flat = htmlspecialchars($_POST['flat'], ENT_QUOTES, 'UTF-8');
-   $street = htmlspecialchars($_POST['street'], ENT_QUOTES, 'UTF-8');
-   $city = htmlspecialchars($_POST['city'], ENT_QUOTES, 'UTF-8');
-   $state = htmlspecialchars($_POST['state'], ENT_QUOTES, 'UTF-8');
-   $country = htmlspecialchars($_POST['country'], ENT_QUOTES, 'UTF-8');
-   $pin_code = htmlspecialchars($_POST['pin_code'], ENT_QUOTES, 'UTF-8');
+   $flat     = trim($_POST['flat'] ?? '');
+   $street   = trim($_POST['street'] ?? '');
+   $city     = trim($_POST['city'] ?? '');
+   $state    = trim($_POST['state'] ?? '');
+   $country  = trim($_POST['country'] ?? '');
+   $pin_code = trim($_POST['pin_code'] ?? '');
 
-   $address = 'flat no. '. $flat .', '. $street .', '. $city .', '. $state .', '. $country .' - '. $pin_code;
-   
-   $total_products = htmlspecialchars($_POST['total_products'], ENT_QUOTES, 'UTF-8');
-   $total_price = htmlspecialchars($_POST['total_price'], ENT_QUOTES, 'UTF-8');
+   $address  = 'flat no. ' . $flat . ', ' . $street . ', ' . $city . ', ' . $state . ', ' . $country . ' - ' . $pin_code;
 
-   $check_cart = $conn->prepare("SELECT * FROM `cart` WHERE user_id = ?");
-   $check_cart->execute([$user_id]);
+   if (!$email) {
+      $message[] = 'Invalid email address provided!';
+   } else {
+      // Re-verify cart and recalculate totals server-side (Prevents Tampering)
+      $check_cart = $conn->prepare("SELECT * FROM `cart` WHERE user_id = ?");
+      $check_cart->execute([$user_id]);
 
-   if($check_cart->rowCount() > 0){
+      if ($check_cart->rowCount() > 0) {
+         $grand_total = 0;
+         $cart_products = [];
 
-      $insert_order = $conn->prepare("INSERT INTO `orders`(user_id, name, number, email, method, address, total_products, total_price) VALUES(?,?,?,?,?,?,?,?)");
-      $insert_order->execute([$user_id, $name, $number, $email, $method, $address, $total_products, $total_price]);
+         while ($cart_item = $check_cart->fetch(PDO::FETCH_ASSOC)) {
+            $cart_products[] = $cart_item['name'] . ' (' . $cart_item['price'] . ' x ' . $cart_item['quantity'] . ') ';
+            $grand_total += ($cart_item['price'] * $cart_item['quantity']);
+         }
 
-      $delete_cart = $conn->prepare("DELETE FROM `cart` WHERE user_id = ?");
-      $delete_cart->execute([$user_id]);
+         $total_products = implode(', ', $cart_products);
 
-      $message[] = 'order placed successfully!';
-   }else{
-      $message[] = 'your cart is empty';
+         // Secure Insertion via Prepared Statements
+         $insert_order = $conn->prepare("INSERT INTO `orders`(user_id, name, number, email, method, address, total_products, total_price) VALUES(?,?,?,?,?,?,?,?)");
+         $insert_order->execute([$user_id, $name, $number, $email, $method, $address, $total_products, $grand_total]);
+
+         // Clear cart after order confirmation
+         $delete_cart = $conn->prepare("DELETE FROM `cart` WHERE user_id = ?");
+         $delete_cart->execute([$user_id]);
+
+         $message[] = 'Order placed successfully!';
+      } else {
+         $message[] = 'Your cart is empty!';
+      }
    }
-
 }
 
 ?>
@@ -59,100 +71,112 @@ if(isset($_POST['order'])){
    <meta charset="UTF-8">
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>checkout</title>
+   <title>Checkout</title>
    
-   <!-- font awesome cdn link  -->
+   <!-- Font Awesome CDN -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 
-   <!-- custom css file link  -->
+   <!-- Custom CSS -->
    <link rel="stylesheet" href="css/style.css">
-
 </head>
 <body>
    
 <?php include 'components/user_header.php'; ?>
 
+<!-- Display Alerts -->
+<?php
+if (!empty($message) && is_array($message)) {
+   foreach ($message as $msg_text) {
+      echo '
+      <div class="message">
+         <span>' . htmlspecialchars($msg_text, ENT_QUOTES, 'UTF-8') . '</span>
+         <i class="fas fa-times" onclick="this.parentElement.remove();"></i>
+      </div>
+      ';
+   }
+}
+?>
+
 <section class="checkout-orders">
 
    <form action="" method="POST">
 
-   <h3>your orders</h3>
+      <h3>Your Orders</h3>
 
       <div class="display-orders">
       <?php
          $grand_total = 0;
-         $total_products = '';
-         $cart_items = [];
          $select_cart = $conn->prepare("SELECT * FROM `cart` WHERE user_id = ?");
          $select_cart->execute([$user_id]);
-         if($select_cart->rowCount() > 0){
-            while($fetch_cart = $select_cart->fetch(PDO::FETCH_ASSOC)){
-               $cart_items[] = $fetch_cart['name'].' ('.$fetch_cart['price'].' x '. $fetch_cart['quantity'].') - ';
-               $total_products = implode($cart_items);
-               $grand_total += ($fetch_cart['price'] * $fetch_cart['quantity']);
+
+         if ($select_cart->rowCount() > 0) {
+            while ($fetch_cart = $select_cart->fetch(PDO::FETCH_ASSOC)) {
+               $sub_total = ($fetch_cart['price'] * $fetch_cart['quantity']);
+               $grand_total += $sub_total;
       ?>
-         <p> <?= $fetch_cart['name']; ?> <span>(<?= 'NRs '.$fetch_cart['price'].'/- x '. $fetch_cart['quantity']; ?>)</span> </p>
+         <p> 
+            <?= htmlspecialchars($fetch_cart['name'], ENT_QUOTES, 'UTF-8'); ?> 
+            <span>(NRs <?= htmlspecialchars($fetch_cart['price'], ENT_QUOTES, 'UTF-8'); ?>/- x <?= htmlspecialchars($fetch_cart['quantity'], ENT_QUOTES, 'UTF-8'); ?>)</span> 
+         </p>
       <?php
             }
-         }else{
-            echo '<p class="empty">your cart is empty!</p>';
+         } else {
+            echo '<p class="empty">Your cart is empty!</p>';
          }
       ?>
-         <input type="hidden" name="total_products" value="<?= $total_products; ?>">
-         <input type="hidden" name="total_price" value="<?= $grand_total; ?>">
-         <div class="grand-total">grand total : <span>NRs <?= $grand_total; ?>/-</span></div>
+         <div class="grand-total">Grand Total : <span>NRs <?= htmlspecialchars($grand_total, ENT_QUOTES, 'UTF-8'); ?>/-</span></div>
       </div>
 
-      <h3>place your orders</h3>
+      <h3>Place Your Orders</h3>
 
       <div class="flex">
          <div class="inputBox">
-            <span>your name :</span>
-            <input type="text" name="name" placeholder="enter your name" class="box" maxlength="20" required>
+            <span>Your Name :</span>
+            <input type="text" name="name" placeholder="Enter your name" class="box" maxlength="50" required>
          </div>
          <div class="inputBox">
-            <span>your number :</span>
-            <input type="number" name="number" placeholder="enter your number" class="box" min="0" max="9999999999" onkeypress="if(this.value.length == 10) return false;" required>
+            <span>Your Phone Number :</span>
+            <input type="tel" name="number" placeholder="Enter your number" class="box" pattern="[0-9]{7,15}" onkeypress="if(this.value.length == 10) return false;" required>
          </div>
          <div class="inputBox">
-            <span>your email :</span>
-            <input type="email" name="email" placeholder="enter your email" class="box" maxlength="50" required>
+            <span>Your Email :</span>
+            <input type="email" name="email" placeholder="Enter your email" class="box" maxlength="50" required>
          </div>
          <div class="inputBox">
-            <span>payment method :</span>
+            <span>Payment Method :</span>
             <select name="method" class="box" required>
-               <option value="cash on delivery">cash on delivery</option>
+               <option value="cash on delivery">Cash On Delivery</option>
                <option value="esewa">eSewa</option>
                <option value="khalti">Khalti</option>
             </select>
          </div>
          <div class="inputBox">
-            <span>address line 01 :</span>
-            <input type="text" name="flat" placeholder="e.g. flat / house number" class="box" maxlength="50" required>
+            <span>Address Line 01 :</span>
+            <input type="text" name="flat" placeholder="e.g. Flat / House Number" class="box" maxlength="50" required>
          </div>
          <div class="inputBox">
-            <span>address line 02 :</span>
-            <input type="text" name="street" placeholder="e.g. street name / ward no" class="box" maxlength="50" required>
+            <span>Address Line 02 :</span>
+            <input type="text" name="street" placeholder="e.g. Street Name / Ward No." class="box" maxlength="50" required>
          </div>
          <div class="inputBox">
-            <span>city :</span>
-            <input type="text" name="city" placeholder="e.g. pokhara" class="box" maxlength="50" required>
+            <span>City :</span>
+            <input type="text" name="city" placeholder="e.g. Pokhara" class="box" maxlength="50" required>
          </div>
          <div class="inputBox">
-            <span>state:</span>
-            <input type="text" name="state" placeholder="e.g. gandaki" class="box" maxlength="50" required>
+            <span>State :</span>
+            <input type="text" name="state" placeholder="e.g. Gandaki" class="box" maxlength="50" required>
          </div>
          <div class="inputBox">
-            <span>country :</span>
+            <span>Country :</span>
             <input type="text" name="country" placeholder="e.g. Nepal" class="box" maxlength="50" required>
          </div>
          <div class="inputBox">
-            <span>pin code :</span>
-            <input type="number" min="0" name="pin_code" placeholder="e.g. 33700" min="0" max="999999" onkeypress="if(this.value.length == 6) return false;" class="box" required>
+            <span>Pin Code :</span>
+            <input type="number" name="pin_code" placeholder="e.g. 33700" min="0" max="999999" onkeypress="if(this.value.length == 6) return false;" class="box" required>
          </div>
       </div>
 
-      <input type="submit" name="order" class="btn <?= ($grand_total > 1)?'':'disabled'; ?>" value="place order">
+      <input type="submit" name="order" class="btn <?= ($grand_total > 0) ? '' : 'disabled'; ?>" value="Place Order">
 
    </form>
 

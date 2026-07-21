@@ -1,70 +1,105 @@
 <?php
 
-if(isset($_POST['add_to_wishlist'])){
+// Handle Add to Wishlist
+if (isset($_POST['add_to_wishlist'])) {
 
-   if($user_id == ''){
+   if (empty($user_id)) {
       header('location:user_login.php');
       exit();
-   }else{
+   } else {
+      $pid = filter_var($_POST['pid'] ?? 0, FILTER_VALIDATE_INT);
 
-      $pid = htmlspecialchars($_POST['pid'], ENT_QUOTES, 'UTF-8');
-      $name = htmlspecialchars($_POST['name'], ENT_QUOTES, 'UTF-8');
-      $price = htmlspecialchars($_POST['price'], ENT_QUOTES, 'UTF-8');
-      $image = htmlspecialchars($_POST['image'], ENT_QUOTES, 'UTF-8');
+      if (!$pid) {
+         $message[] = 'Invalid product selected!';
+      } else {
+         try {
+            // Fetch trusted product details from DB instead of trusting POST body
+            $select_product = $conn->prepare("SELECT name, price, image_01 FROM `products` WHERE id = ?");
+            $select_product->execute([$pid]);
 
-      $check_wishlist_numbers = $conn->prepare("SELECT * FROM `wishlist` WHERE name = ? AND user_id = ?");
-      $check_wishlist_numbers->execute([$name, $user_id]);
+            if ($select_product->rowCount() > 0) {
+               $fetch_product = $select_product->fetch(PDO::FETCH_ASSOC);
+               $name  = $fetch_product['name'];
+               $price = $fetch_product['price'];
+               $image = $fetch_product['image_01'];
 
-      $check_cart_numbers = $conn->prepare("SELECT * FROM `cart` WHERE name = ? AND user_id = ?");
-      $check_cart_numbers->execute([$name, $user_id]);
+               // Check if item is already in user's wishlist using pid
+               $check_wishlist = $conn->prepare("SELECT id FROM `wishlist` WHERE pid = ? AND user_id = ?");
+               $check_wishlist->execute([$pid, $user_id]);
 
-      if($check_wishlist_numbers->rowCount() > 0){
-         $message[] = 'already added to wishlist!';
-      }elseif($check_cart_numbers->rowCount() > 0){
-         $message[] = 'already added to cart!';
-      }else{
-         $insert_wishlist = $conn->prepare("INSERT INTO `wishlist`(user_id, pid, name, price, image) VALUES(?,?,?,?,?)");
-         $insert_wishlist->execute([$user_id, $pid, $name, $price, $image]);
-         $message[] = 'added to wishlist!';
+               if ($check_wishlist->rowCount() > 0) {
+                  $message[] = 'Already added to wishlist!';
+               } else {
+                  // Insert into wishlist
+                  $insert_wishlist = $conn->prepare("INSERT INTO `wishlist`(user_id, pid, name, price, image) VALUES(?,?,?,?,?)");
+                  $insert_wishlist->execute([$user_id, $pid, $name, $price, $image]);
+
+                  // If moved from cart to wishlist, remove item from cart
+                  if (isset($_POST['cart_id'])) {
+                     $cart_id = filter_var($_POST['cart_id'], FILTER_VALIDATE_INT);
+                     $delete_cart = $conn->prepare("DELETE FROM `cart` WHERE id = ? AND user_id = ?");
+                     $delete_cart->execute([$cart_id, $user_id]);
+                     $message[] = 'Moved to wishlist!';
+                  } else {
+                     $message[] = 'Added to wishlist!';
+                  }
+               }
+            } else {
+               $message[] = 'Product no longer exists!';
+            }
+         } catch (PDOException $e) {
+            $message[] = 'Database error occurred. Please try again.';
+         }
       }
-
    }
-
 }
 
-if(isset($_POST['add_to_cart'])){
+// Handle Add to Cart
+if (isset($_POST['add_to_cart'])) {
 
-   if($user_id == ''){
+   if (empty($user_id)) {
       header('location:user_login.php');
       exit();
-   }else{
+   } else {
+      $pid = filter_var($_POST['pid'] ?? 0, FILTER_VALIDATE_INT);
+      $qty = filter_var($_POST['qty'] ?? 1, FILTER_VALIDATE_INT);
+      $qty = ($qty && $qty > 0) ? $qty : 1; // Fallback to 1 if negative or invalid
 
-      // ✅ Modern PHP 8+ Sanitization replacing FILTER_SANITIZE_STRING
-      $pid = htmlspecialchars($_POST['pid'], ENT_QUOTES, 'UTF-8');
-      $name = htmlspecialchars($_POST['name'], ENT_QUOTES, 'UTF-8');
-      $price = htmlspecialchars($_POST['price'], ENT_QUOTES, 'UTF-8');
-      $image = htmlspecialchars($_POST['image'], ENT_QUOTES, 'UTF-8');
-      $qty = htmlspecialchars($_POST['qty'], ENT_QUOTES, 'UTF-8');
+      if (!$pid) {
+         $message[] = 'Invalid product selected!';
+      } else {
+         try {
+            // Fetch trusted product details from DB
+            $select_product = $conn->prepare("SELECT name, price, image_01 FROM `products` WHERE id = ?");
+            $select_product->execute([$pid]);
 
-      $check_cart_numbers = $conn->prepare("SELECT * FROM `cart` WHERE name = ? AND user_id = ?");
-      $check_cart_numbers->execute([$name, $user_id]);
+            if ($select_product->rowCount() > 0) {
+               $fetch_product = $select_product->fetch(PDO::FETCH_ASSOC);
+               $name  = $fetch_product['name'];
+               $price = $fetch_product['price'];
+               $image = $fetch_product['image_01'];
 
-      if($check_cart_numbers->rowCount() > 0){
-         $message[] = 'already added to cart!';
-      }else{
+               // Check if item is already in user's cart
+               $check_cart = $conn->prepare("SELECT id FROM `cart` WHERE pid = ? AND user_id = ?");
+               $check_cart->execute([$pid, $user_id]);
 
-         $check_wishlist_numbers = $conn->prepare("SELECT * FROM `wishlist` WHERE name = ? AND user_id = ?");
-         $check_wishlist_numbers->execute([$name, $user_id]);
+               if ($check_cart->rowCount() > 0) {
+                  $message[] = 'Already added to cart!';
+               } else {
+                  // Remove from wishlist if present before adding to cart
+                  $delete_wishlist = $conn->prepare("DELETE FROM `wishlist` WHERE pid = ? AND user_id = ?");
+                  $delete_wishlist->execute([$pid, $user_id]);
 
-         if($check_wishlist_numbers->rowCount() > 0){
-            $delete_wishlist = $conn->prepare("DELETE FROM `wishlist` WHERE name = ? AND user_id = ?");
-            $delete_wishlist->execute([$name, $user_id]);
+                  $insert_cart = $conn->prepare("INSERT INTO `cart`(user_id, pid, name, price, quantity, image) VALUES(?,?,?,?,?,?)");
+                  $insert_cart->execute([$user_id, $pid, $name, $price, $qty, $image]);
+                  $message[] = 'Added to cart!';
+               }
+            } else {
+               $message[] = 'Product no longer exists!';
+            }
+         } catch (PDOException $e) {
+            $message[] = 'Database error occurred. Please try again.';
          }
-
-         $insert_cart = $conn->prepare("INSERT INTO `cart`(user_id, pid, name, price, quantity, image) VALUES(?,?,?,?,?,?)");
-         $insert_cart->execute([$user_id, $pid, $name, $price, $qty, $image]);
-         $message[] = 'added to cart!';
-         
       }
 
    }

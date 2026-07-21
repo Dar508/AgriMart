@@ -1,0 +1,14 @@
+{
+    "workbench.settings.useSplitJSON": true,
+    "cSpell.mergeCSpellSettings": false,
+    "cSpell.words": [
+        "cpass",
+        "AgriMart",
+        "Hamrobazar",
+        "mysqli",
+        "PDO" ,
+        "httponly" ,
+        "Daraz",
+        
+    ]
+}
