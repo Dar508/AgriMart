@@ -94,38 +94,48 @@ if (!empty($message) && is_array($message)) {
 
      if ($select_products->rowCount() > 0) {
         while ($fetch_product = $select_products->fetch(PDO::FETCH_ASSOC)) {
+           $retail_price     = $fetch_product['price'];
+           $wholesale_price  = $fetch_product['supplier_price'] ?? 0;
+           $min_supplier_qty = $fetch_product['min_supplier_qty'] ?? 0;
    ?>
    <form action="" method="post" class="box">
-      <input type="hidden" name="pid" value="<?= htmlspecialchars($fetch_product['id']); ?>">
-      <input type="hidden" name="name" value="<?= htmlspecialchars($fetch_product['name']); ?>">
-      <input type="hidden" name="price" value="<?= htmlspecialchars($fetch_product['price']); ?>">
-      <input type="hidden" name="image" value="<?= htmlspecialchars($fetch_product['image_01']); ?>">
+      <input type="hidden" name="pid" value="<?= htmlspecialchars($fetch_product['id'], ENT_QUOTES, 'UTF-8'); ?>">
+      <input type="hidden" name="name" value="<?= htmlspecialchars($fetch_product['name'], ENT_QUOTES, 'UTF-8'); ?>">
+      <input type="hidden" name="price" value="<?= htmlspecialchars($retail_price, ENT_QUOTES, 'UTF-8'); ?>">
+      <input type="hidden" name="image" value="<?= htmlspecialchars($fetch_product['image_01'], ENT_QUOTES, 'UTF-8'); ?>">
       
       <div class="row">
          <div class="image-container">
             <div class="main-image">
-               <img src="uploaded_img/<?= htmlspecialchars($fetch_product['image_01']); ?>" id="main-product-img" alt="Product Image">
+               <img src="uploaded_img/<?= htmlspecialchars($fetch_product['image_01'], ENT_QUOTES, 'UTF-8'); ?>" id="main-product-img" alt="Product Image">
             </div>
             <div class="sub-image">
                <?php if (!empty($fetch_product['image_01'])): ?>
-                  <img src="uploaded_img/<?= htmlspecialchars($fetch_product['image_01']); ?>" class="thumb-img" alt="">
+                  <img src="uploaded_img/<?= htmlspecialchars($fetch_product['image_01'], ENT_QUOTES, 'UTF-8'); ?>" class="thumb-img" alt="">
                <?php endif; ?>
                <?php if (!empty($fetch_product['image_02'])): ?>
-                  <img src="uploaded_img/<?= htmlspecialchars($fetch_product['image_02']); ?>" class="thumb-img" alt="">
+                  <img src="uploaded_img/<?= htmlspecialchars($fetch_product['image_02'], ENT_QUOTES, 'UTF-8'); ?>" class="thumb-img" alt="">
                <?php endif; ?>
                <?php if (!empty($fetch_product['image_03'])): ?>
-                  <img src="uploaded_img/<?= htmlspecialchars($fetch_product['image_03']); ?>" class="thumb-img" alt="">
+                  <img src="uploaded_img/<?= htmlspecialchars($fetch_product['image_03'], ENT_QUOTES, 'UTF-8'); ?>" class="thumb-img" alt="">
                <?php endif; ?>
             </div>
          </div>
          
          <div class="content">
-            <div class="name"><?= htmlspecialchars($fetch_product['name']); ?></div>
+            <div class="name"><?= htmlspecialchars($fetch_product['name'], ENT_QUOTES, 'UTF-8'); ?></div>
             <div class="flex">
-               <div class="price"><span>Rs. </span><?= htmlspecialchars($fetch_product['price']); ?><span>/-</span></div>
-               <input type="number" name="qty" class="qty" min="1" max="99" onkeypress="if(this.value.length == 2) return false;" value="1">
+               <div class="price"><span>Rs. </span><?= htmlspecialchars($retail_price, ENT_QUOTES, 'UTF-8'); ?><span>/-</span></div>
+               <input type="number" name="qty" class="qty" min="1" max="999" onkeypress="if(this.value.length == 4) return false;" value="1">
             </div>
-            <div class="details"><?= htmlspecialchars($fetch_product['details']); ?></div>
+
+            <?php if ($wholesale_price > 0): ?>
+               <div class="wholesale-notice" style="margin: 1rem 0; font-size: 1.3rem; color: #059669; background: #ecfdf5; padding: 0.8rem; border-radius: 0.5rem; border: 1px solid #d1fae5;">
+                  <i class="fas fa-tags"></i> <strong>Wholesale Offer:</strong> Buy <strong><?= htmlspecialchars($min_supplier_qty, ENT_QUOTES, 'UTF-8'); ?>+ units</strong> and get it for <strong>Rs. <?= htmlspecialchars($wholesale_price, ENT_QUOTES, 'UTF-8'); ?>/- per unit</strong>!
+               </div>
+            <?php endif; ?>
+
+            <div class="details"><?= htmlspecialchars($fetch_product['details'], ENT_QUOTES, 'UTF-8'); ?></div>
             <div class="flex-btn">
                <input type="submit" value="Add To Cart" class="btn" name="add_to_cart">
                <input class="option-btn" type="submit" name="add_to_wishlist" value="Add To Wishlist">
@@ -150,7 +160,7 @@ if (!empty($message) && is_array($message)) {
    <!-- Write Review Form -->
    <div class="add-review-form">
       <form action="" method="post">
-         <input type="hidden" name="pid" value="<?= htmlspecialchars($pid); ?>">
+         <input type="hidden" name="pid" value="<?= htmlspecialchars($pid, ENT_QUOTES, 'UTF-8'); ?>">
          
          <label class="form-label">Rating:</label>
          <select name="rating" required class="box">

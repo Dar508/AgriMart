@@ -15,7 +15,6 @@ $message = [];
 
 if (isset($_POST['order'])) {
 
-   // Trim and validate raw input
    $name     = trim($_POST['name'] ?? '');
    $number   = trim($_POST['number'] ?? '');
    $email    = filter_var(trim($_POST['email'] ?? ''), FILTER_VALIDATE_EMAIL);
@@ -33,7 +32,7 @@ if (isset($_POST['order'])) {
    if (!$email) {
       $message[] = 'Invalid email address provided!';
    } else {
-      // Re-verify cart and recalculate totals server-side (Prevents Tampering)
+      // Re-verify cart and recalculate totals server-side using wholesale rules to prevent tampering
       $check_cart = $conn->prepare("SELECT * FROM `cart` WHERE user_id = ?");
       $check_cart->execute([$user_id]);
 
@@ -42,8 +41,27 @@ if (isset($_POST['order'])) {
          $cart_products = [];
 
          while ($cart_item = $check_cart->fetch(PDO::FETCH_ASSOC)) {
-            $cart_products[] = $cart_item['name'] . ' (' . $cart_item['price'] . ' x ' . $cart_item['quantity'] . ') ';
-            $grand_total += ($cart_item['price'] * $cart_item['quantity']);
+            // Check product rules for calculation
+            $get_rules = $conn->prepare("SELECT price, supplier_price, min_supplier_qty FROM `products` WHERE id = ?");
+            $get_rules->execute([$cart_item['pid']]);
+            $rule = $get_rules->fetch(PDO::FETCH_ASSOC);
+
+            $retail_price     = $rule['price'] ?? $cart_item['price'];
+            $wholesale_price  = $rule['supplier_price'] ?? 0;
+            $min_supplier_qty = $rule['min_supplier_qty'] ?? 999999;
+            $cart_qty         = (int)$cart_item['quantity'];
+
+            // Determine correct rate
+            if ($cart_qty >= $min_supplier_qty && $wholesale_price > 0) {
+               $active_price = $wholesale_price;
+            } else {
+               $active_price = $retail_price;
+            }
+
+            $sub_total = $active_price * $cart_qty;
+            $grand_total += $sub_total;
+
+            $cart_products[] = $cart_item['name'] . ' (' . $active_price . ' x ' . $cart_qty . ') ';
          }
 
          $total_products = implode(', ', $cart_products);
@@ -73,17 +91,13 @@ if (isset($_POST['order'])) {
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Checkout</title>
    
-   <!-- Font Awesome CDN -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-
-   <!-- Custom CSS -->
    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
    
 <?php include 'components/user_header.php'; ?>
 
-<!-- Display Alerts -->
 <?php
 if (!empty($message) && is_array($message)) {
    foreach ($message as $msg_text) {
@@ -111,12 +125,28 @@ if (!empty($message) && is_array($message)) {
 
          if ($select_cart->rowCount() > 0) {
             while ($fetch_cart = $select_cart->fetch(PDO::FETCH_ASSOC)) {
-               $sub_total = ($fetch_cart['price'] * $fetch_cart['quantity']);
+               // Fetch wholesale rules for display calculation
+               $get_rules = $conn->prepare("SELECT price, supplier_price, min_supplier_qty FROM `products` WHERE id = ?");
+               $get_rules->execute([$fetch_cart['pid']]);
+               $rule = $get_rules->fetch(PDO::FETCH_ASSOC);
+
+               $retail_price     = $rule['price'] ?? $fetch_cart['price'];
+               $wholesale_price  = $rule['supplier_price'] ?? 0;
+               $min_supplier_qty = $rule['min_supplier_qty'] ?? 999999;
+               $cart_qty         = (int)$fetch_cart['quantity'];
+
+               if ($cart_qty >= $min_supplier_qty && $wholesale_price > 0) {
+                  $active_price = $wholesale_price;
+               } else {
+                  $active_price = $retail_price;
+               }
+
+               $sub_total = ($active_price * $cart_qty);
                $grand_total += $sub_total;
       ?>
          <p> 
             <?= htmlspecialchars($fetch_cart['name'], ENT_QUOTES, 'UTF-8'); ?> 
-            <span>(NRs <?= htmlspecialchars($fetch_cart['price'], ENT_QUOTES, 'UTF-8'); ?>/- x <?= htmlspecialchars($fetch_cart['quantity'], ENT_QUOTES, 'UTF-8'); ?>)</span> 
+            <span>(NRs <?= htmlspecialchars($active_price, ENT_QUOTES, 'UTF-8'); ?>/- x <?= htmlspecialchars($cart_qty, ENT_QUOTES, 'UTF-8'); ?>)</span> 
          </p>
       <?php
             }

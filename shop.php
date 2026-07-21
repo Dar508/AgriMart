@@ -12,6 +12,19 @@ if(isset($_SESSION['user_id'])){
    $user_id = '';
 }
 
+// Fetch user type to check if they are a supplier/wholesaler
+$user_type = 'user';
+if(!empty($user_id)){
+   try {
+      $select_user = $conn->prepare("SELECT user_type FROM `users` WHERE id = ?");
+      $select_user->execute([$user_id]);
+      $fetch_user = $select_user->fetch(PDO::FETCH_ASSOC);
+      $user_type = $fetch_user['user_type'] ?? 'user';
+   } catch (PDOException $e) {
+      $user_type = 'user';
+   }
+}
+
 include 'components/wishlist_cart.php';
 
 ?>
@@ -59,22 +72,47 @@ if(!empty($message) && is_array($message)){
      $select_products->execute();
      if($select_products->rowCount() > 0){
       while($fetch_product = $select_products->fetch(PDO::FETCH_ASSOC)){
+         
+         $retail_price     = $fetch_product['price'];
+         $supplier_price   = $fetch_product['supplier_price'] ?? 0;
+         $min_supplier_qty = $fetch_product['min_supplier_qty'] ?? 1;
+
+         // Determine which price/quantity values to present based on account type
+         if ($user_type === 'supplier') {
+            $display_price = ($supplier_price > 0) ? $supplier_price : $retail_price;
+            $min_qty       = $min_supplier_qty;
+            $badge_html    = '<span style="display: block; font-size: 1rem; color: #059669; font-weight: 600; margin-top: 0.3rem;"><i class="fas fa-tag"></i> Wholesale Tier Active</span>';
+         } else {
+            $display_price = $retail_price;
+            $min_qty       = 1;
+            $badge_html    = '';
+         }
    ?>
    <form action="" method="post" class="box">
-      <!-- Hidden fields directly referencing product values -->
+      <!-- Hidden fields referencing dynamic prices and quantities -->
       <input type="hidden" name="pid" value="<?= htmlspecialchars($fetch_product['id'], ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="name" value="<?= htmlspecialchars($fetch_product['name'], ENT_QUOTES, 'UTF-8'); ?>">
-      <input type="hidden" name="price" value="<?= htmlspecialchars($fetch_product['price'], ENT_QUOTES, 'UTF-8'); ?>">
+      <input type="hidden" name="price" value="<?= htmlspecialchars($display_price, ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="image" value="<?= htmlspecialchars($fetch_product['image_01'], ENT_QUOTES, 'UTF-8'); ?>">
       
       <button class="fas fa-heart" type="submit" name="add_to_wishlist" value="add_to_wishlist"></button>
       <a href="quick_view.php?pid=<?= htmlspecialchars($fetch_product['id'], ENT_QUOTES, 'UTF-8'); ?>" class="fas fa-eye"></a>
       <img src="uploaded_img/<?= htmlspecialchars($fetch_product['image_01'], ENT_QUOTES, 'UTF-8'); ?>" alt="">
       
-      <div class="name"><?= htmlspecialchars($fetch_product['name'], ENT_QUOTES, 'UTF-8'); ?></div>
+      <div class="name">
+         <?= htmlspecialchars($fetch_product['name'], ENT_QUOTES, 'UTF-8'); ?>
+         <?= $badge_html; ?>
+      </div>
+
+      <?php if ($user_type !== 'supplier' && $supplier_price > 0): ?>
+         <div style="font-size: 1.1rem; color: #059669; margin: 0.5rem 0;">
+            <i class="fas fa-tags"></i> Bulk Deal: Rs <?= htmlspecialchars($supplier_price, ENT_QUOTES, 'UTF-8'); ?>/- (Min: <?= htmlspecialchars($min_supplier_qty, ENT_QUOTES, 'UTF-8'); ?> units)
+         </div>
+      <?php endif; ?>
+
       <div class="flex">
-         <div class="price"><span>Rs </span><?= htmlspecialchars($fetch_product['price'], ENT_QUOTES, 'UTF-8'); ?><span>/-</span></div>
-         <input type="number" name="qty" class="qty" min="1" max="99" onkeypress="if(this.value.length == 2) return false;" value="1">
+         <div class="price"><span>Rs </span><?= htmlspecialchars($display_price, ENT_QUOTES, 'UTF-8'); ?><span>/-</span></div>
+         <input type="number" name="qty" class="qty" min="<?= $min_qty; ?>" max="999" onkeypress="if(this.value.length == 4) return false;" value="<?= $min_qty; ?>">
       </div>
       <input type="submit" value="add to cart" class="btn" name="add_to_cart">
    </form>

@@ -72,11 +72,11 @@ if (!empty($message) && is_array($message)) {
          ?>
             <div class="swiper-slide slide">
                <div class="image">
-                  <img src="images/<?= htmlspecialchars($fetch_slide['image'], ENT_QUOTES, 'UTF-8'); ?>" alt="Banner Image">
+                  <img src="../uploaded_img/<?= htmlspecialchars($fetch_slide['image'], ENT_QUOTES, 'UTF-8'); ?>" alt="">
                </div>
                <div class="content">
-                  <span><?= htmlspecialchars($fetch_slide['sub_heading'], ENT_QUOTES, 'UTF-8'); ?></span>
-                  <h3><?= htmlspecialchars($fetch_slide['heading'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                  <span><?= htmlspecialchars($fetch_slide['subtitle'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
+                  <h3><?= htmlspecialchars($fetch_slide['title'] ?? '', ENT_QUOTES, 'UTF-8'); ?></h3>
                   <a href="shop.php" class="btn">Shop Now</a>
                </div>
             </div>
@@ -145,17 +145,18 @@ if (!empty($message) && is_array($message)) {
         if ($select_products->rowCount() > 0) {
            while ($fetch_product = $select_products->fetch(PDO::FETCH_ASSOC)) {
             
-              $supplier_price   = $fetch_product['supplier_price'] ?? $fetch_product['price'];
+              $retail_price     = $fetch_product['price'];
+              $supplier_price   = $fetch_product['supplier_price'] ?? 0;
               $min_supplier_qty = $fetch_product['min_supplier_qty'] ?? 1;
 
               if ($user_type === 'supplier') {
-                 $display_price = $supplier_price;
+                 $display_price = ($supplier_price > 0) ? $supplier_price : $retail_price;
                  $min_qty       = $min_supplier_qty;
-                 $badge_html    = '<span class="badge badge-wholesale">Wholesale Bulk Tier</span>';
+                 $badge_html    = '<span class="badge badge-wholesale" style="font-size: 1rem; color: #059669; display: block; font-weight: 600; margin-top: 0.3rem;"><i class="fas fa-tag"></i> Wholesale Tier Active</span>';
               } else {
-                 $display_price = $fetch_product['price'];
+                 $display_price = $retail_price;
                  $min_qty       = 1;
-                 $badge_html    = '<span class="badge badge-retail">Retail Tier</span>';
+                 $badge_html    = '';
               }
       ?>
       <form action="" method="post" class="swiper-slide slide">
@@ -172,9 +173,15 @@ if (!empty($message) && is_array($message)) {
             <?= htmlspecialchars($fetch_product['name'], ENT_QUOTES, 'UTF-8'); ?>
             <?= $badge_html; ?>
          </div>
+
+         <?php if ($user_type !== 'supplier' && $supplier_price > 0): ?>
+            <div style="font-size: 1.1rem; color: #059669; margin: 0.5rem 0;">
+               <i class="fas fa-tags"></i> Bulk Deal: Rs. <?= htmlspecialchars($supplier_price, ENT_QUOTES, 'UTF-8'); ?>/- (Min: <?= htmlspecialchars($min_supplier_qty, ENT_QUOTES, 'UTF-8'); ?> units)
+            </div>
+         <?php endif; ?>
          
          <div class="flex">
-            <div class="price"><span>NRS </span><?= htmlspecialchars($display_price, ENT_QUOTES, 'UTF-8'); ?><span>/kg</span></div>
+            <div class="price"><span>Rs. </span><?= htmlspecialchars($display_price, ENT_QUOTES, 'UTF-8'); ?><span>/-</span></div>
             <input type="number" name="qty" class="qty" min="<?= $min_qty; ?>" max="999" onkeypress="if(this.value.length == 4) return false;" value="<?= $min_qty; ?>">
          </div>
          

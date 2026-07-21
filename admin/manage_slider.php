@@ -11,11 +11,14 @@ if (empty($admin_id)) {
    exit();
 }
 
-// Multi-Image Upload Handler
+$message = [];
+
+// Multi-Image Upload Handler for General Banners / Events / Promotions
 if (isset($_POST['add_slide'])) {
 
-   $sub_heading = filter_var($_POST['sub_heading'], FILTER_SANITIZE_STRING);
-   $heading = filter_var($_POST['heading'], FILTER_SANITIZE_STRING);
+   $title    = trim($_POST['title'] ?? '');
+   $subtitle = trim($_POST['subtitle'] ?? '');
+   $link     = trim($_POST['link'] ?? '');
 
    if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
       
@@ -24,20 +27,18 @@ if (isset($_POST['add_slide'])) {
 
       for ($i = 0; $i < $total_files; $i++) {
          $image_name = $_FILES['images']['name'][$i];
-         $image_name = filter_var($image_name, FILTER_SANITIZE_STRING);
          $image_size = $_FILES['images']['size'][$i];
          $image_tmp = $_FILES['images']['tmp_name'][$i];
 
          if ($image_size > 2000000) {
             $message[] = "Image ($image_name) is larger than 2MB!";
          } else {
-            // Generate unique filename to avoid overwriting existing files
             $ext = pathinfo($image_name, PATHINFO_EXTENSION);
-            $new_image_name = uniqid('slide_') . '.' . $ext;
-            $image_folder = '../images/' . $new_image_name;
+            $new_image_name = uniqid('banner_') . '.' . $ext;
+            $image_folder = '../uploaded_img/' . $new_image_name;
 
-            $insert_slide = $conn->prepare("INSERT INTO `slider` (sub_heading, heading, image) VALUES (?, ?, ?)");
-            $insert_slide->execute([$sub_heading, $heading, $new_image_name]);
+            $insert_slide = $conn->prepare("INSERT INTO `slider` (title, subtitle, image, link) VALUES (?, ?, ?, ?)");
+            $insert_slide->execute([$title, $subtitle, $new_image_name, $link]);
 
             if ($insert_slide) {
                move_uploaded_file($image_tmp, $image_folder);
@@ -47,7 +48,7 @@ if (isset($_POST['add_slide'])) {
       }
 
       if ($success_count > 0) {
-         $message[] = "$success_count slide banner(s) uploaded successfully!";
+         $message[] = "$success_count banner(s) uploaded successfully!";
       }
    } else {
       $message[] = 'Please select at least one image!';
@@ -62,7 +63,7 @@ if (isset($_GET['delete'])) {
    $fetch_delete_image = $delete_slide_image->fetch(PDO::FETCH_ASSOC);
 
    if ($fetch_delete_image) {
-      $file_path = '../images/' . $fetch_delete_image['image'];
+      $file_path = '../uploaded_img/' . $fetch_delete_image['image'];
       if (file_exists($file_path)) {
          unlink($file_path);
       }
@@ -82,7 +83,7 @@ if (isset($_GET['delete'])) {
    <meta charset="UTF-8">
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Manage Slider Banners</title>
+   <title>Manage General Sliders & Announcements</title>
    
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
    <link rel="stylesheet" href="../css/admin_style.css">
@@ -137,6 +138,16 @@ if (isset($_GET['delete'])) {
 
 <?php include '../components/admin_header.php'; ?>
 
+<!-- Flash Messages -->
+<?php if (!empty($message)): ?>
+   <?php foreach ($message as $msg): ?>
+      <div style="max-width: 900px; margin: 1.5rem auto 0 auto; padding: 1.2rem 2rem; background: #d1fae5; color: #065f46; border-radius: .6rem; font-size: 1.4rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+         <span><i class="fas fa-info-circle" style="margin-right: .5rem;"></i> <?= htmlspecialchars($msg, ENT_QUOTES, 'UTF-8'); ?></span>
+         <i class="fas fa-times" style="cursor: pointer;" onclick="this.parentElement.remove();"></i>
+      </div>
+   <?php endforeach; ?>
+<?php endif; ?>
+
 <section class="add-products">
 
    <h1 class="heading">Add Hero Banners</h1>
@@ -144,12 +155,16 @@ if (isset($_GET['delete'])) {
    <form action="" method="post" enctype="multipart/form-data">
       <div class="flex">
          <div class="inputBox">
-            <span>Sub-Heading (e.g., Upto 50% Off)</span>
-            <input type="text" class="box" required maxlength="100" placeholder="Enter sub-heading" name="sub_heading">
+            <span>Main Title / Announcement Heading</span>
+            <input type="text" class="box" required maxlength="100" placeholder="e.g. SPECIAL PROMOTION OR EVENT" name="title">
          </div>
          <div class="inputBox">
-            <span>Main Heading (e.g., Fresh Organic Produce)</span>
-            <input type="text" class="box" required maxlength="100" placeholder="Enter main heading" name="heading">
+            <span>Subtitle / Details (Numbers, Alphas, Symbols allowed)</span>
+            <input type="text" class="box" required maxlength="150" placeholder="e.g. Join our seasonal webinar or flash sale!" name="subtitle">
+         </div>
+         <div class="inputBox">
+            <span>Action Link URL (Optional / Event Page)</span>
+            <input type="text" class="box" required maxlength="255" placeholder="e.g. events.php or shop.php" name="link">
          </div>
          <div class="inputBox">
             <span>Banner Images (Choose Multiple)</span>
@@ -178,18 +193,19 @@ if (isset($_GET['delete'])) {
          while ($fetch_slides = $show_slides->fetch(PDO::FETCH_ASSOC)) { 
    ?>
    <div class="box">
-      <img src="../images/<?= htmlspecialchars($fetch_slides['image']); ?>" alt="Banner Image" style="width: 100%; height: 180px; object-fit: cover; border-radius: .5rem;">
-      <div class="name" style="font-size: 1.4rem; color: var(--light-color); margin-top: 1rem;"><?= htmlspecialchars($fetch_slides['sub_heading']); ?></div>
-      <div class="price" style="font-size: 1.8rem; color: var(--black); font-weight: bold; margin-bottom: 1rem;"><?= htmlspecialchars($fetch_slides['heading']); ?></div>
+      <img src="../uploaded_img/<?= htmlspecialchars($fetch_slides['image'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" alt="Banner Image" style="width: 100%; height: 160px; object-fit: cover; border-radius: .5rem;">
+      <div class="name" style="margin-top: 1rem;"><?= htmlspecialchars($fetch_slides['title'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
+      <div style="font-size: 1.3rem; color: #475569; margin: .5rem 0;"><strong>Subtitle:</strong> <?= htmlspecialchars($fetch_slides['subtitle'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
+      <div style="font-size: 1.2rem; color: #64748b; word-break: break-all; margin-bottom: 1rem;"><strong>Link:</strong> <?= htmlspecialchars($fetch_slides['link'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
+      
       <div class="flex-btn">
-         <a href="update_slider.php?update=<?= $fetch_slides['id']; ?>" class="option-btn">Edit / Replace</a>
-         <a href="manage_slider.php?delete=<?= $fetch_slides['id']; ?>" class="delete-btn" onclick="return confirm('Delete this slide banner?');">Delete</a>
+         <a href="manage_slider.php?delete=<?= $fetch_slides['id']; ?>" class="delete-btn" onclick="return confirm('Delete this banner/announcement?');">Delete</a>
       </div>
    </div>
    <?php
          }
       } else {
-         echo '<p class="empty">No slider graphics uploaded yet!</p>';
+         echo '<p class="empty">No banner graphics or announcements uploaded yet!</p>';
       }
    ?>
    
@@ -203,16 +219,12 @@ if (isset($_GET['delete'])) {
 const imageInput = document.getElementById('imageInput');
 const previewContainer = document.getElementById('previewContainer');
 
-// Store files in a DataTransfer object so individual deletions only affect the target file
 let dataTransfer = new DataTransfer();
 
 imageInput.addEventListener('change', (e) => {
-   // Append newly picked files to current queue
    for (let file of e.target.files) {
       dataTransfer.items.add(file);
    }
-   
-   // Sync input element files with dataTransfer state
    imageInput.files = dataTransfer.files;
    renderPreviews();
 });
@@ -242,7 +254,6 @@ function renderPreviews() {
 function removeSingleImage(indexToRemove) {
    const newDT = new DataTransfer();
 
-   // Copy all files EXCEPT the one clicked for removal
    Array.from(dataTransfer.files).forEach((file, index) => {
       if (index !== indexToRemove) {
          newDT.items.add(file);
@@ -250,8 +261,8 @@ function removeSingleImage(indexToRemove) {
    });
 
    dataTransfer = newDT;
-   imageInput.files = dataTransfer.files; // Update actual form input
-   renderPreviews(); // Re-render preview grid
+   imageInput.files = dataTransfer.files;
+   renderPreviews();
 }
 </script>
 

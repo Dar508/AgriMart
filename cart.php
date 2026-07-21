@@ -25,7 +25,7 @@ if (isset($_POST['delete'])) {
    $message[] = 'Cart item deleted!';
 }
 
-// Delete all items from cart (Postback method to prevent accidental GET execution)
+// Delete all items from cart
 if (isset($_POST['delete_all'])) {
    $delete_cart_all = $conn->prepare("DELETE FROM `cart` WHERE user_id = ?");
    $delete_cart_all->execute([$user_id]);
@@ -54,17 +54,13 @@ if (isset($_POST['update_qty'])) {
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Shopping Cart - AgriMart</title>
    
-   <!-- Font Awesome CDN -->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-
-   <!-- Custom CSS -->
    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
    
 <?php include 'components/user_header.php'; ?>
 
-<!-- Display Messages -->
 <?php
 if (!empty($message) && is_array($message)) {
    foreach ($message as $msg) {
@@ -91,18 +87,36 @@ if (!empty($message) && is_array($message)) {
 
       if ($select_cart->rowCount() > 0) {
          while ($fetch_cart = $select_cart->fetch(PDO::FETCH_ASSOC)) {
-            $sub_total = ($fetch_cart['price'] * $fetch_cart['quantity']);
+            
+            // Fetch live product pricing rules (Retail vs Wholesale Tier)
+            $get_product_rules = $conn->prepare("SELECT price, supplier_price, min_supplier_qty FROM `products` WHERE id = ?");
+            $get_product_rules->execute([$fetch_cart['pid']]);
+            $product_rule = $get_product_rules->fetch(PDO::FETCH_ASSOC);
+
+            $retail_price      = $product_rule['price'] ?? $fetch_cart['price'];
+            $wholesale_price   = $product_rule['supplier_price'] ?? 0;
+            $min_supplier_qty  = $product_rule['min_supplier_qty'] ?? 999999;
+            $cart_qty          = (int)$fetch_cart['quantity'];
+
+            // Apply wholesale price if quantity condition is met
+            if ($cart_qty >= $min_supplier_qty && $wholesale_price > 0) {
+               $effective_price = $wholesale_price;
+               $pricing_tier_label = '<span style="color: #10b981; font-size: 1.1rem; display: block; font-weight: bold;">Wholesale Price Applied!</span>';
+            } else {
+               $effective_price = $retail_price;
+               $pricing_tier_label = '';
+            }
+
+            $sub_total = ($effective_price * $cart_qty);
             $grand_total += $sub_total;
    ?>
    <form action="" method="post" class="box">
-      <!-- Hidden fields for cart/wishlist context -->
       <input type="hidden" name="cart_id" value="<?= htmlspecialchars($fetch_cart['id'], ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="pid" value="<?= htmlspecialchars($fetch_cart['pid'], ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="name" value="<?= htmlspecialchars($fetch_cart['name'], ENT_QUOTES, 'UTF-8'); ?>">
-      <input type="hidden" name="price" value="<?= htmlspecialchars($fetch_cart['price'], ENT_QUOTES, 'UTF-8'); ?>">
+      <input type="hidden" name="price" value="<?= htmlspecialchars($effective_price, ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="image" value="<?= htmlspecialchars($fetch_cart['image'], ENT_QUOTES, 'UTF-8'); ?>">
 
-      <!-- Quick View & Wishlist Actions -->
       <a href="quick_view.php?pid=<?= htmlspecialchars($fetch_cart['pid'], ENT_QUOTES, 'UTF-8'); ?>" class="fas fa-eye"></a>
       <button class="fas fa-heart" type="submit" name="add_to_wishlist" value="add_to_wishlist"></button>
 
@@ -111,8 +125,11 @@ if (!empty($message) && is_array($message)) {
       <div class="name"><?= htmlspecialchars($fetch_cart['name'], ENT_QUOTES, 'UTF-8'); ?></div>
       
       <div class="flex">
-         <div class="price">NRs <?= htmlspecialchars($fetch_cart['price'], ENT_QUOTES, 'UTF-8'); ?>/-</div>
-         <input type="number" name="qty" class="qty" min="1" max="999" onkeypress="if(this.value.length == 4) return false;" value="<?= htmlspecialchars($fetch_cart['quantity'], ENT_QUOTES, 'UTF-8'); ?>">
+         <div class="price">
+            NRs <?= htmlspecialchars($effective_price, ENT_QUOTES, 'UTF-8'); ?>/-
+            <?= $pricing_tier_label; ?>
+         </div>
+         <input type="number" name="qty" class="qty" min="1" max="999" onkeypress="if(this.value.length == 4) return false;" value="<?= $cart_qty; ?>">
          <button type="submit" class="fas fa-edit" name="update_qty" title="Update Quantity"></button>
       </div>
 
