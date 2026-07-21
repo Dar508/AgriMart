@@ -44,9 +44,11 @@ include 'components/wishlist_cart.php';
    <div class="box-container">
 
    <?php
-      $category = $_GET['category'];
-      // Filter products dynamically based on url string query parameter
-      $select_products = $conn->prepare("SELECT * FROM `products` WHERE category = ?"); 
+      // Safely check if category exists in URL to avoid PHP warnings
+      $category = isset($_GET['category']) ? $_GET['category'] : '';
+
+      // Query matched against 'category' column
+      $select_products = $conn->prepare("SELECT * FROM `products` WHERE category = ?");
       $select_products->execute([$category]);
       
       if($select_products->rowCount() > 0){
