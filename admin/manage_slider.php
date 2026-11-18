@@ -12,38 +12,58 @@ if (empty($admin_id)) {
 }
 
 $message = [];
+$upload_dir = __DIR__ . '/../uploaded_img/';
 
 // Multi-Image Upload Handler for General Banners / Events / Promotions
 if (isset($_POST['add_slide'])) {
-
-   $title    = trim($_POST['title'] ?? '');
+   $title = trim($_POST['title'] ?? '');
    $subtitle = trim($_POST['subtitle'] ?? '');
-   $link     = trim($_POST['link'] ?? '');
+   $link = trim($_POST['link'] ?? '');
 
    if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
-      
-      $total_files = count($_FILES['images']['name']);
       $success_count = 0;
+      $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+      $total_files = count($_FILES['images']['name']);
 
       for ($i = 0; $i < $total_files; $i++) {
-         $image_name = $_FILES['images']['name'][$i];
-         $image_size = $_FILES['images']['size'][$i];
-         $image_tmp = $_FILES['images']['tmp_name'][$i];
+         $image_name = $_FILES['images']['name'][$i] ?? 'image';
+         $image_size = (int) ($_FILES['images']['size'][$i] ?? 0);
+         $image_tmp = $_FILES['images']['tmp_name'][$i] ?? '';
+         $upload_error = $_FILES['images']['error'][$i] ?? UPLOAD_ERR_NO_FILE;
+         $ext = strtolower(pathinfo($image_name, PATHINFO_EXTENSION));
 
+         if ($upload_error !== UPLOAD_ERR_OK || !is_uploaded_file($image_tmp)) {
+            $message[] = "Could not receive image ($image_name). Please try again.";
+            continue;
+         }
          if ($image_size > 2000000) {
             $message[] = "Image ($image_name) is larger than 2MB!";
-         } else {
-            $ext = pathinfo($image_name, PATHINFO_EXTENSION);
-            $new_image_name = uniqid('banner_') . '.' . $ext;
-            $image_folder = '../uploaded_img/' . $new_image_name;
+            continue;
+         }
+         if (!in_array($ext, $allowed_extensions, true) || @getimagesize($image_tmp) === false) {
+            $message[] = "Image ($image_name) must be a valid JPG, PNG, GIF, or WebP image.";
+            continue;
+         }
+         if (!is_dir($upload_dir) || !is_writable($upload_dir)) {
+            $message[] = 'The image upload folder is not writable by XAMPP.';
+            break;
+         }
 
+         $new_image_name = 'banner_' . bin2hex(random_bytes(12)) . '.' . $ext;
+         $image_path = $upload_dir . $new_image_name;
+         if (!move_uploaded_file($image_tmp, $image_path)) {
+            $message[] = "Could not save image ($image_name). Check XAMPP upload folder permissions.";
+            continue;
+         }
+
+         try {
             $insert_slide = $conn->prepare("INSERT INTO `slider` (title, subtitle, image, link) VALUES (?, ?, ?, ?)");
             $insert_slide->execute([$title, $subtitle, $new_image_name, $link]);
-
-            if ($insert_slide) {
-               move_uploaded_file($image_tmp, $image_folder);
-               $success_count++;
-            }
+            $success_count++;
+         } catch (PDOException $e) {
+            @unlink($image_path);
+            error_log('Slider insert failed: ' . $e->getMessage());
+            $message[] = "Could not register image ($image_name). Please try again.";
          }
       }
 
@@ -63,7 +83,7 @@ if (isset($_GET['delete'])) {
    $fetch_delete_image = $delete_slide_image->fetch(PDO::FETCH_ASSOC);
 
    if ($fetch_delete_image) {
-      $file_path = '../uploaded_img/' . $fetch_delete_image['image'];
+      $file_path = $upload_dir . basename($fetch_delete_image['image']);
       if (file_exists($file_path)) {
          unlink($file_path);
       }

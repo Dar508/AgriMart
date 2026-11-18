@@ -38,7 +38,7 @@ include 'components/wishlist_cart.php';
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
    
    <!-- Custom CSS -->
-   <link rel="stylesheet" href="css/style.css">
+   <link rel="stylesheet" href="css/style.css?v=20261119-seasonal">
 </head>
 <body>
    
@@ -67,12 +67,17 @@ if (!empty($message) && is_array($message)) {
             try {
                $select_slider = $conn->prepare("SELECT * FROM `slider`");
                $select_slider->execute();
-               if ($select_slider->rowCount() > 0) {
-                  while ($fetch_slide = $select_slider->fetch(PDO::FETCH_ASSOC)) {
+               $displayed_slides = 0;
+               while ($fetch_slide = $select_slider->fetch(PDO::FETCH_ASSOC)) {
+                  $slide_image = basename((string) ($fetch_slide['image'] ?? ''));
+                  if ($slide_image === '' || !is_file(__DIR__ . '/uploaded_img/' . $slide_image)) {
+                     continue;
+                  }
+                  $displayed_slides++;
          ?>
             <div class="swiper-slide slide">
                <div class="image">
-                  <img src="../uploaded_img/<?= htmlspecialchars($fetch_slide['image'], ENT_QUOTES, 'UTF-8'); ?>" alt="">
+                  <img src="uploaded_img/<?= htmlspecialchars($slide_image, ENT_QUOTES, 'UTF-8'); ?>" alt="">
                </div>
                <div class="content">
                   <span><?= htmlspecialchars($fetch_slide['subtitle'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
@@ -81,8 +86,8 @@ if (!empty($message) && is_array($message)) {
                </div>
             </div>
          <?php
-                  }
-               } else {
+               }
+               if ($displayed_slides === 0) {
                   echo '<p class="empty">No promotional banners active.</p>';
                }
             } catch (PDOException $e) {
@@ -131,41 +136,83 @@ if (!empty($message) && is_array($message)) {
 </section>
 
 <!-- Seasonal fruit and vegetable listings selected by farmers -->
-<section class="home-products">
-   <h1 class="heading">Seasonal Produce</h1>
-   <div class="box-container" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(24rem,1fr)); gap:1.5rem;">
+<section class="seasonal-section">
+   <div class="seasonal-intro">
+      <div>
+         <span class="seasonal-eyebrow"><i class="fas fa-leaf"></i> Fresh from Nepal’s farms</span>
+         <h2>Seasonal Produce</h2>
+         <p>Discover what local farmers are harvesting right now.</p>
+      </div>
+      <a class="seasonal-shop-link" href="shop.php">Browse all produce <i class="fas fa-arrow-right"></i></a>
+   </div>
+
+   <div class="seasonal-grid">
       <?php
-         $select_seasonal_products = $conn->prepare("SELECT * FROM `products` WHERE is_seasonal = 1 ORDER BY id DESC LIMIT 8");
+         $select_seasonal_products = $conn->prepare("SELECT * FROM `products` WHERE is_seasonal = 1 ORDER BY id DESC");
          $select_seasonal_products->execute();
-         if ($select_seasonal_products->rowCount() > 0):
-            while ($seasonal_product = $select_seasonal_products->fetch(PDO::FETCH_ASSOC)):
-               $seasonal_retail_price = $seasonal_product['price'];
-               $seasonal_supplier_price = $seasonal_product['supplier_price'] ?? 0;
-               $seasonal_min_qty = $seasonal_product['min_supplier_qty'] ?? 1;
-               $seasonal_display_price = ($user_type === 'supplier' && $seasonal_supplier_price > 0) ? $seasonal_supplier_price : $seasonal_retail_price;
-               $seasonal_display_qty = ($user_type === 'supplier') ? $seasonal_min_qty : 1;
+         $seasonal_count = 0;
+         while ($seasonal_product = $select_seasonal_products->fetch(PDO::FETCH_ASSOC)):
+            $seasonal_images = [];
+            foreach (['image_01', 'image_02', 'image_03'] as $image_key) {
+               $seasonal_image = basename((string) ($seasonal_product[$image_key] ?? ''));
+               if ($seasonal_image !== '' && is_file(__DIR__ . '/uploaded_img/' . $seasonal_image)) {
+                  $seasonal_images[] = $seasonal_image;
+               }
+            }
+            if (!$seasonal_images) {
+               continue;
+            }
+            $seasonal_count++;
+            $seasonal_main_image = $seasonal_images[0];
+            $seasonal_retail_price = $seasonal_product['price'];
+            $seasonal_supplier_price = $seasonal_product['supplier_price'] ?? 0;
+            $seasonal_min_qty = $seasonal_product['min_supplier_qty'] ?? 1;
+            $seasonal_display_price = ($user_type === 'supplier' && $seasonal_supplier_price > 0) ? $seasonal_supplier_price : $seasonal_retail_price;
+            $seasonal_display_qty = ($user_type === 'supplier') ? $seasonal_min_qty : 1;
       ?>
-         <form action="" method="post" class="box">
+         <form action="" method="post" class="seasonal-card">
             <input type="hidden" name="pid" value="<?= htmlspecialchars($seasonal_product['id'], ENT_QUOTES, 'UTF-8'); ?>">
             <input type="hidden" name="name" value="<?= htmlspecialchars($seasonal_product['name'], ENT_QUOTES, 'UTF-8'); ?>">
             <input type="hidden" name="price" value="<?= htmlspecialchars($seasonal_display_price, ENT_QUOTES, 'UTF-8'); ?>">
-            <input type="hidden" name="image" value="<?= htmlspecialchars($seasonal_product['image_01'], ENT_QUOTES, 'UTF-8'); ?>">
-            <button class="fas fa-heart" type="submit" name="add_to_wishlist" value="add_to_wishlist"></button>
-            <a href="quick_view.php?pid=<?= htmlspecialchars($seasonal_product['id'], ENT_QUOTES, 'UTF-8'); ?>" class="fas fa-eye"></a>
-            <img src="uploaded_img/<?= htmlspecialchars($seasonal_product['image_01'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?= htmlspecialchars($seasonal_product['name'], ENT_QUOTES, 'UTF-8'); ?>">
-            <div class="name"><?= htmlspecialchars($seasonal_product['name'], ENT_QUOTES, 'UTF-8'); ?> <span style="display:block; margin-top:.4rem; color:#15803d; font-size:1.2rem;"><i class="fas fa-leaf"></i> Seasonal <?= htmlspecialchars(ucfirst($seasonal_product['category']), ENT_QUOTES, 'UTF-8'); ?></span></div>
-            <div class="flex">
-               <div class="price"><span>Rs. </span><?= htmlspecialchars($seasonal_display_price, ENT_QUOTES, 'UTF-8'); ?><span>/-</span></div>
-               <input type="number" name="qty" class="qty" min="<?= (int)$seasonal_display_qty; ?>" max="999" value="<?= (int)$seasonal_display_qty; ?>">
+            <input type="hidden" name="image" value="<?= htmlspecialchars($seasonal_main_image, ENT_QUOTES, 'UTF-8'); ?>" class="seasonal-cart-image">
+
+            <div class="seasonal-card-actions">
+               <button class="fas fa-heart" type="submit" name="add_to_wishlist" value="add_to_wishlist" aria-label="Add <?= htmlspecialchars($seasonal_product['name'], ENT_QUOTES, 'UTF-8'); ?> to wishlist"></button>
+               <a href="quick_view.php?pid=<?= htmlspecialchars($seasonal_product['id'], ENT_QUOTES, 'UTF-8'); ?>" class="fas fa-eye" aria-label="View <?= htmlspecialchars($seasonal_product['name'], ENT_QUOTES, 'UTF-8'); ?>"></a>
             </div>
-            <input type="submit" value="Add To Cart" class="btn" name="add_to_cart">
+
+            <div class="seasonal-gallery">
+               <div class="seasonal-image-frame">
+                  <img class="seasonal-main-image" src="uploaded_img/<?= htmlspecialchars($seasonal_main_image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?= htmlspecialchars($seasonal_product['name'], ENT_QUOTES, 'UTF-8'); ?>">
+                  <span class="seasonal-badge"><i class="fas fa-leaf"></i> In season</span>
+               </div>
+               <?php if (count($seasonal_images) > 1): ?>
+                  <div class="seasonal-thumbnails" aria-label="More photos of <?= htmlspecialchars($seasonal_product['name'], ENT_QUOTES, 'UTF-8'); ?>">
+                     <?php foreach ($seasonal_images as $image_index => $seasonal_image): ?>
+                        <button type="button" class="seasonal-thumb<?= $image_index === 0 ? ' is-active' : ''; ?>" data-image="<?= htmlspecialchars($seasonal_image, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Show product photo <?= $image_index + 1; ?>" aria-pressed="<?= $image_index === 0 ? 'true' : 'false'; ?>">
+                           <img src="uploaded_img/<?= htmlspecialchars($seasonal_image, ENT_QUOTES, 'UTF-8'); ?>" alt="">
+                        </button>
+                     <?php endforeach; ?>
+                  </div>
+               <?php endif; ?>
+            </div>
+
+            <div class="seasonal-card-info">
+               <span class="seasonal-category"><?= htmlspecialchars(ucfirst($seasonal_product['category']), ENT_QUOTES, 'UTF-8'); ?></span>
+               <h3><?= htmlspecialchars($seasonal_product['name'], ENT_QUOTES, 'UTF-8'); ?></h3>
+               <div class="seasonal-card-bottom">
+                  <div class="price"><span>Rs. </span><?= htmlspecialchars($seasonal_display_price, ENT_QUOTES, 'UTF-8'); ?><span>/-</span></div>
+                  <label class="seasonal-quantity">Qty
+                     <input type="number" name="qty" min="<?= (int) $seasonal_display_qty; ?>" max="999" value="<?= (int) $seasonal_display_qty; ?>">
+                  </label>
+               </div>
+               <input type="submit" value="Add To Cart" class="btn seasonal-add-btn" name="add_to_cart">
+            </div>
          </form>
-      <?php
-            endwhile;
-         else:
-            echo '<p class="empty">Farmers have not marked seasonal produce yet.</p>';
-         endif;
-      ?>
+      <?php endwhile; ?>
+      <?php if ($seasonal_count === 0): ?>
+         <p class="empty seasonal-empty">Farmers have not marked seasonal produce yet.</p>
+      <?php endif; ?>
    </div>
 </section>
 
@@ -246,6 +293,25 @@ if (!empty($message) && is_array($message)) {
 <script src="js/script.js"></script>
 
 <script>
+
+// Let shoppers browse the photos farmers uploaded for each seasonal product.
+document.querySelectorAll(".seasonal-card").forEach((card) => {
+   const mainImage = card.querySelector(".seasonal-main-image");
+   const cartImage = card.querySelector(".seasonal-cart-image");
+   card.querySelectorAll(".seasonal-thumb").forEach((thumb) => {
+      thumb.addEventListener("click", () => {
+         const image = thumb.dataset.image;
+         if (!image || !mainImage) return;
+         mainImage.src = `uploaded_img/${image}`;
+         if (cartImage) cartImage.value = image;
+         card.querySelectorAll(".seasonal-thumb").forEach((item) => {
+            item.classList.toggle("is-active", item === thumb);
+            item.setAttribute("aria-pressed", item === thumb ? "true" : "false");
+         });
+      });
+   });
+});
+
 const homeSwiper = new Swiper(".home-slider", {
    loop: true,
    spaceBetween: 20,
