@@ -175,7 +175,7 @@ if (isset($_GET['delete'])) {
       <!-- Live Previews Grid -->
       <div id="previewContainer" class="preview-container"></div>
 
-      <input type="submit" value="Upload Banner(s)" class="btn" name="add_slide" style="margin-top: 2rem;">
+      <input type="submit" value="Upload Banner" class="btn" name="add_slide" style="margin-top: 2rem;">
    </form>
 
 </section>

@@ -28,7 +28,7 @@ if (isset($_POST['update_payment'])) {
       // Verify that this order contains produce belonging to this specific farmer
       $check_ownership = $conn->prepare("
          SELECT o.id FROM `orders` o 
-         JOIN `products` p ON o.total_products LIKE CONCAT('%', p.name, '%')
+         JOIN `products` p ON o.total_products LIKE CONCAT('%', p.name, ' (%')
          WHERE o.id = ? AND p.farmer_id = ?
       ");
       $check_ownership->execute([$order_id, $farmer_id]);
@@ -83,7 +83,7 @@ if (isset($_POST['update_payment'])) {
       */
       $select_orders = $conn->prepare("
          SELECT DISTINCT o.* FROM `orders` o 
-         INNER JOIN `products` p ON (o.total_products LIKE CONCAT('%', p.name, '%'))
+         INNER JOIN `products` p ON (o.total_products LIKE CONCAT('%', p.name, ' (%'))
          WHERE p.farmer_id = ? 
          ORDER BY o.placed_on DESC
       ");

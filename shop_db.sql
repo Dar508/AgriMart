@@ -131,6 +131,7 @@ CREATE TABLE `products` (
   `price` int NOT NULL,
   `supplier_price` varchar(100) NOT NULL DEFAULT '0',
   `min_supplier_qty` varchar(100) NOT NULL DEFAULT '1',
+  `is_seasonal` tinyint(1) NOT NULL DEFAULT '0',
   `image_01` varchar(100) NOT NULL,
   `image_02` varchar(100) NOT NULL DEFAULT '',
   `image_03` varchar(100) NOT NULL DEFAULT ''

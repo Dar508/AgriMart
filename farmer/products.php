@@ -25,6 +25,7 @@ if (isset($_POST['add_product'])) {
    $min_supplier_qty  = (int)($_POST['min_supplier_qty'] ?? 1);
    $category          = trim($_POST['category'] ?? '');
    $details           = trim($_POST['details'] ?? '');
+   $is_seasonal       = isset($_POST['is_seasonal']) ? 1 : 0;
 
    // Check if product name already exists for this farmer
    $select_products = $conn->prepare("SELECT * FROM `products` WHERE name = ? AND farmer_id = ?");
@@ -91,8 +92,8 @@ if (isset($_POST['add_product'])) {
             $image_02 = $uploaded_images[1]['name'] ?? '';
             $image_03 = $uploaded_images[2]['name'] ?? '';
 
-            $insert_products = $conn->prepare("INSERT INTO `products`(farmer_id, name, category, details, price, supplier_price, min_supplier_qty, image_01, image_02, image_03) VALUES(?,?,?,?,?,?,?,?,?,?)");
-            $insert_products->execute([$farmer_id, $name, $category, $details, $price, $supplier_price, $min_supplier_qty, $image_01, $image_02, $image_03]);
+            $insert_products = $conn->prepare("INSERT INTO `products`(farmer_id, name, category, details, price, supplier_price, min_supplier_qty, is_seasonal, image_01, image_02, image_03) VALUES(?,?,?,?,?,?,?,?,?,?,?)");
+            $insert_products->execute([$farmer_id, $name, $category, $details, $price, $supplier_price, $min_supplier_qty, $is_seasonal, $image_01, $image_02, $image_03]);
 
             foreach ($uploaded_images as $img) {
                move_uploaded_file($img['tmp'], $img['folder']);
@@ -261,6 +262,12 @@ if (isset($_GET['delete'])) {
             <span>Product Details / Harvest Conditions (required)</span>
             <textarea name="details" class="box" required placeholder="Enter organic certification info or harvest details..." cols="30" rows="10"></textarea>
          </div>
+         <div class="inputBox" style="width: 100%;">
+            <label style="display:flex; align-items:center; gap:.8rem; font-size:1.5rem; color:var(--black);">
+               <input type="checkbox" name="is_seasonal" value="1" style="width:1.8rem; height:1.8rem;">
+               Feature this as seasonal produce on the customer homepage
+            </label>
+         </div>
       </div>
       <input type="submit" value="Publish Produce" class="btn" name="add_product">
    </form>
@@ -278,6 +285,9 @@ if (isset($_GET['delete'])) {
    <div class="box">
       <img src="../uploaded_img/<?= htmlspecialchars($fetch_products['image_01'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?= htmlspecialchars($fetch_products['name'], ENT_QUOTES, 'UTF-8'); ?>">
       <div class="name"><?= htmlspecialchars($fetch_products['name'], ENT_QUOTES, 'UTF-8'); ?></div>
+      <?php if (!empty($fetch_products['is_seasonal'])): ?>
+         <div style="display:inline-block; margin:.5rem 0; padding:.4rem .8rem; border-radius:2rem; background:#dcfce7; color:#166534; font-size:1.2rem; font-weight:700;"><i class="fas fa-leaf"></i> Seasonal</div>
+      <?php endif; ?>
       <div style="font-size: 1.4rem; padding: 0.5rem 0;">Retail: NRs <span><?= htmlspecialchars($fetch_products['price'], ENT_QUOTES, 'UTF-8'); ?></span>/kg</div>
       <div style="font-size: 1.4rem; color: green; padding-bottom: 0.5rem;">
          Wholesale: NRs <span><?= htmlspecialchars($fetch_products['supplier_price'] ?? '0', ENT_QUOTES, 'UTF-8'); ?></span>/kg 

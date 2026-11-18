@@ -130,6 +130,45 @@ if (!empty($message) && is_array($message)) {
 
 </section>
 
+<!-- Seasonal fruit and vegetable listings selected by farmers -->
+<section class="home-products">
+   <h1 class="heading">Seasonal Produce</h1>
+   <div class="box-container" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(24rem,1fr)); gap:1.5rem;">
+      <?php
+         $select_seasonal_products = $conn->prepare("SELECT * FROM `products` WHERE is_seasonal = 1 ORDER BY id DESC LIMIT 8");
+         $select_seasonal_products->execute();
+         if ($select_seasonal_products->rowCount() > 0):
+            while ($seasonal_product = $select_seasonal_products->fetch(PDO::FETCH_ASSOC)):
+               $seasonal_retail_price = $seasonal_product['price'];
+               $seasonal_supplier_price = $seasonal_product['supplier_price'] ?? 0;
+               $seasonal_min_qty = $seasonal_product['min_supplier_qty'] ?? 1;
+               $seasonal_display_price = ($user_type === 'supplier' && $seasonal_supplier_price > 0) ? $seasonal_supplier_price : $seasonal_retail_price;
+               $seasonal_display_qty = ($user_type === 'supplier') ? $seasonal_min_qty : 1;
+      ?>
+         <form action="" method="post" class="box">
+            <input type="hidden" name="pid" value="<?= htmlspecialchars($seasonal_product['id'], ENT_QUOTES, 'UTF-8'); ?>">
+            <input type="hidden" name="name" value="<?= htmlspecialchars($seasonal_product['name'], ENT_QUOTES, 'UTF-8'); ?>">
+            <input type="hidden" name="price" value="<?= htmlspecialchars($seasonal_display_price, ENT_QUOTES, 'UTF-8'); ?>">
+            <input type="hidden" name="image" value="<?= htmlspecialchars($seasonal_product['image_01'], ENT_QUOTES, 'UTF-8'); ?>">
+            <button class="fas fa-heart" type="submit" name="add_to_wishlist" value="add_to_wishlist"></button>
+            <a href="quick_view.php?pid=<?= htmlspecialchars($seasonal_product['id'], ENT_QUOTES, 'UTF-8'); ?>" class="fas fa-eye"></a>
+            <img src="uploaded_img/<?= htmlspecialchars($seasonal_product['image_01'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?= htmlspecialchars($seasonal_product['name'], ENT_QUOTES, 'UTF-8'); ?>">
+            <div class="name"><?= htmlspecialchars($seasonal_product['name'], ENT_QUOTES, 'UTF-8'); ?> <span style="display:block; margin-top:.4rem; color:#15803d; font-size:1.2rem;"><i class="fas fa-leaf"></i> Seasonal <?= htmlspecialchars(ucfirst($seasonal_product['category']), ENT_QUOTES, 'UTF-8'); ?></span></div>
+            <div class="flex">
+               <div class="price"><span>Rs. </span><?= htmlspecialchars($seasonal_display_price, ENT_QUOTES, 'UTF-8'); ?><span>/-</span></div>
+               <input type="number" name="qty" class="qty" min="<?= (int)$seasonal_display_qty; ?>" max="999" value="<?= (int)$seasonal_display_qty; ?>">
+            </div>
+            <input type="submit" value="Add To Cart" class="btn" name="add_to_cart">
+         </form>
+      <?php
+            endwhile;
+         else:
+            echo '<p class="empty">Farmers have not marked seasonal produce yet.</p>';
+         endif;
+      ?>
+   </div>
+</section>
+
 <!-- Latest Products Slider -->
 <section class="home-products">
 

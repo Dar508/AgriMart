@@ -31,34 +31,50 @@ if (isset($_POST['update'])) {
    $min_supplier_qty = (int)($_POST['min_supplier_qty'] ?? 1);
    $category         = trim($_POST['category'] ?? '');
    $details          = trim($_POST['details'] ?? '');
+   $is_seasonal      = isset($_POST['is_seasonal']) ? 1 : 0;
 
    // Update textual fields
-   $update_product = $conn->prepare("UPDATE `products` SET name = ?, category = ?, details = ?, price = ?, supplier_price = ?, min_supplier_qty = ? WHERE id = ? AND farmer_id = ?");
-   $update_product->execute([$name, $category, $details, $price, $supplier_price, $min_supplier_qty, $update_id, $farmer_id]);
+   $update_product = $conn->prepare("UPDATE `products` SET name = ?, category = ?, details = ?, price = ?, supplier_price = ?, min_supplier_qty = ?, is_seasonal = ? WHERE id = ? AND farmer_id = ?");
+   $update_product->execute([$name, $category, $details, $price, $supplier_price, $min_supplier_qty, $is_seasonal, $update_id, $farmer_id]);
 
-   $message[] = 'Product updated successfully!';
+   $message[] = 'Product details updated successfully!';
 
-   // Handle Image 01 Replacement
-   $old_image_01 = $_POST['old_image_01'] ?? '';
-   $image_01     = $_FILES['image_01']['name'] ?? '';
-   $image_01_tmp = $_FILES['image_01']['tmp_name'] ?? '';
-   $image_01_size= $_FILES['image_01']['size'] ?? 0;
+   // Handle Image Replacements (Image 01, 02, 03)
+   $allowed_extensions = ['jpg', 'jpeg', 'png', 'webp'];
 
-   if (!empty($image_01)) {
-      if ($image_01_size > 2000000) {
-         $message[] = 'Image 1 size is too large (max 2MB)!';
-      } else {
-         $ext = strtolower(pathinfo($image_01, PATHINFO_EXTENSION));
-         $new_name_01 = 'farmer_' . $farmer_id . '_' . uniqid() . '_1.' . $ext;
-         
-         $update_img_01 = $conn->prepare("UPDATE `products` SET image_01 = ? WHERE id = ? AND farmer_id = ?");
-         $update_img_01->execute([$new_name_01, $update_id, $farmer_id]);
-         
-         move_uploaded_file($image_01_tmp, '../uploaded_img/' . $new_name_01);
-         if (!empty($old_image_01) && file_exists('../uploaded_img/' . $old_image_01)) {
-            unlink('../uploaded_img/' . $old_image_01);
+   for ($i = 1; $i <= 3; $i++) {
+      $img_key = 'image_0' . $i;
+      $old_img = $_POST['old_' . $img_key] ?? '';
+      
+      if (!empty($_FILES[$img_key]['name'])) {
+         $img_name = $_FILES[$img_key]['name'];
+         $img_size = $_FILES[$img_key]['size'];
+         $img_tmp  = $_FILES[$img_key]['tmp_name'];
+         $ext      = strtolower(pathinfo($img_name, PATHINFO_EXTENSION));
+
+         if (!in_array($ext, $allowed_extensions)) {
+            $message[] = "Image $i format not allowed (Use JPG, PNG, WEBP)!";
+            continue;
          }
-         $message[] = 'Primary image updated!';
+
+         if ($img_size > 2000000) {
+            $message[] = "Image $i size exceeds 2MB limit!";
+            continue;
+         }
+
+         $new_filename = 'farmer_' . $farmer_id . '_' . uniqid() . '_' . $i . '.' . $ext;
+         
+         // Update DB
+         $update_img = $conn->prepare("UPDATE `products` SET $img_key = ? WHERE id = ? AND farmer_id = ?");
+         $update_img->execute([$new_filename, $update_id, $farmer_id]);
+         
+         // Move new file & delete old file if it exists
+         move_uploaded_file($img_tmp, '../uploaded_img/' . $new_filename);
+         if (!empty($old_img) && file_exists('../uploaded_img/' . $old_img)) {
+            unlink('../uploaded_img/' . $old_img);
+         }
+         
+         $message[] = "Image $i updated successfully!";
       }
    }
 }
@@ -104,10 +120,22 @@ $fetch_products = $select_products->fetch(PDO::FETCH_ASSOC);
    <h1 class="heading">Update Product Listing</h1>
 
    <form action="" method="post" enctype="multipart/form-data">
-      <input type="hidden" name="old_image_01" value="<?= htmlspecialchars($fetch_products['image_01'], ENT_QUOTES, 'UTF-8'); ?>">
+      <!-- Hidden inputs to keep track of old images for deletion upon replacement -->
+      <input type="hidden" name="old_image_01" value="<?= htmlspecialchars($fetch_products['image_01'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+      <input type="hidden" name="old_image_02" value="<?= htmlspecialchars($fetch_products['image_02'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+      <input type="hidden" name="old_image_03" value="<?= htmlspecialchars($fetch_products['image_03'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
 
-      <div class="image-container" style="text-align: center; margin-bottom: 2rem;">
-         <img src="../uploaded_img/<?= htmlspecialchars($fetch_products['image_01'], ENT_QUOTES, 'UTF-8'); ?>" alt="" style="height: 200px; object-fit: cover; border-radius: .8rem;">
+      <!-- Image Previews Container -->
+      <div class="image-container" style="display: flex; gap: 2rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap;">
+         <?php for ($i = 1; $i <= 3; $i++): 
+            $img_col = 'image_0' . $i;
+            if (!empty($fetch_products[$img_col])):
+         ?>
+            <div style="text-align: center;">
+               <img src="../uploaded_img/<?= htmlspecialchars($fetch_products[$img_col], ENT_QUOTES, 'UTF-8'); ?>" alt="" style="width: 120px; height: 120px; object-fit: cover; border-radius: .8rem; border: var(--border);">
+               <p style="font-size: 1.4rem; color: var(--light-color); margin-top: .5rem;"><?= $i === 1 ? 'Primary Image' : 'Image ' . $i ?></p>
+            </div>
+         <?php endif; endfor; ?>
       </div>
 
       <span>Product Name</span>
@@ -124,25 +152,38 @@ $fetch_products = $select_products->fetch(PDO::FETCH_ASSOC);
 
       <span>Category</span>
       <select name="category" class="box" required>
-         <option value="fruits" <?= $fetch_products['category'] === 'fruits' ? 'selected' : ''; ?>>Fruits</option>
-         <option value="vegetables" <?= $fetch_products['category'] === 'vegetables' ? 'selected' : ''; ?>>Vegetables</option>
-         <option value="grains" <?= $fetch_products['category'] === 'grains' ? 'selected' : ''; ?>>Grains & Organic Staples</option>
-         <option value="other" <?= $fetch_products['category'] === 'other' ? 'selected' : ''; ?>>Other Products</option>
+         <option value="fruits" <?= ($fetch_products['category'] ?? '') === 'fruits' ? 'selected' : ''; ?>>Fruits</option>
+         <option value="vegetables" <?= ($fetch_products['category'] ?? '') === 'vegetables' ? 'selected' : ''; ?>>Vegetables</option>
+         <option value="grains" <?= ($fetch_products['category'] ?? '') === 'grains' ? 'selected' : ''; ?>>Grains & Organic Staples</option>
+         <option value="other" <?= ($fetch_products['category'] ?? '') === 'other' ? 'selected' : ''; ?>>Other Products</option>
       </select>
 
       <span>Replace Primary Image (Optional)</span>
       <input type="file" name="image_01" accept="image/jpg, image/jpeg, image/png, image/webp" class="box">
 
+      <span>Replace Image 02 (Optional)</span>
+      <input type="file" name="image_02" accept="image/jpg, image/jpeg, image/png, image/webp" class="box">
+
+      <span>Replace Image 03 (Optional)</span>
+      <input type="file" name="image_03" accept="image/jpg, image/jpeg, image/png, image/webp" class="box">
+
       <span>Details</span>
       <textarea name="details" class="box" required cols="30" rows="10"><?= htmlspecialchars($fetch_products['details'], ENT_QUOTES, 'UTF-8'); ?></textarea>
 
+      <label style="display:flex; align-items:center; gap:.8rem; margin:1rem 0 2rem; font-size:1.5rem; color:var(--black);">
+         <input type="checkbox" name="is_seasonal" value="1" <?= !empty($fetch_products['is_seasonal']) ? 'checked' : ''; ?> style="width:1.8rem; height:1.8rem;">
+         Feature this as seasonal produce on the customer homepage
+      </label>
+
       <div class="flex-btn">
          <input type="submit" name="update" class="btn" value="Save Changes">
-         <a href="products.php" class="option-btn">Go Back</a>
+         <a href="products.php" class="option-btn" style="background: var(--light-bg); color: var(--black); text-align: center; padding: 1.2rem 3rem; font-size: 1.8rem; border-radius: .5rem;">Go Back</a>
       </div>
    </form>
 
 </section>
+
+<script src="../js/admin_script.js"></script>
 
 </body>
 </html>

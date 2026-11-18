@@ -1,46 +1,33 @@
 <?php
-   if (isset($message) && is_array($message)) {
-      foreach ($message as $msg) {
-         echo '
-         <div class="message">
-            <span>' . htmlspecialchars($msg, ENT_QUOTES, 'UTF-8') . '</span>
-            <i class="fas fa-times" onclick="this.parentElement.remove();"></i>
-         </div>
-         ';
-      }
-   }
+// Handle Logout if triggered
+if (isset($_GET['logout'])) {
+   session_unset();
+   session_destroy();
+   header('location: farmer_login.php');
+   exit();
+}
 ?>
 
-<header class="header">
-   <section class="flex">
-      <a href="../farmer/dashboard.php" class="logo">Farmer<span>Portal</span></a>
+<header class="header" style="position: sticky; top:0; left:0; right:0; background: var(--white); box-shadow: var(--box-shadow); z-index: 1000;">
+   <section class="flex" style="display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 4%; max-width: 1200px; margin: 0 auto;">
+      
+      <a href="dashboard.php" class="logo" style="font-size: 2.2rem; font-weight: bolder; color: var(--black);">Farmer<span>Panel</span></a>
 
-      <nav class="navbar">
-         <a href="../farmer/dashboard.php">Dashboard</a>
-         <a href="../farmer/products.php">Manage Products</a>
-         <a href="../farmer/orders.php">Incoming Orders</a>
+      <nav class="navbar" style="display: flex; gap: 2rem; align-items: center;">
+         <a href="dashboard.php" style="font-size: 1.6rem; color: var(--black); text-decoration: none; font-weight: 600;">Dashboard</a>
+         <a href="products.php" style="font-size: 1.6rem; color: var(--black); text-decoration: none; font-weight: 600;">Manage Products</a>
+         <a href="placed_orders.php" style="font-size: 1.6rem; color: var(--black); text-decoration: none; font-weight: 600;">Incoming Orders</a>
+         <a href="messages.php" style="font-size: 1.6rem; color: var(--black); text-decoration: none; font-weight: 600;">Messages</a>
       </nav>
 
-      <div class="icons">
-         <div id="menu-btn" class="fas fa-bars"></div>
-         <div id="user-btn" class="fas fa-user" onclick="document.querySelector('.profile').classList.toggle('active');"></div>
+      <div class="icons" style="display: flex; gap: 1.5rem; align-items: center;">
+         <div id="menu-btn" class="fas fa-bars" style="font-size: 2rem; cursor: pointer; display: none; color: var(--black);"></div>
+         
+         <!-- Profile icon directly acts as the logout action -->
+         <a href="dashboard.php?logout=1" onclick="return confirm('Logout from the platform?');" title="Logout" style="font-size: 2.2rem; cursor: pointer; color: var(--red); text-decoration: none;">
+            <i class="fas fa-user-circle"></i>
+         </a>
       </div>
 
-      <div class="profile">
-         <?php
-            $farmer_name = 'Farmer';
-            if (!empty($farmer_id)) {
-               $select_profile = $conn->prepare("SELECT name FROM `farmers` WHERE id = ?");
-               $select_profile->execute([$farmer_id]);
-               $fetch_profile = $select_profile->fetch(PDO::FETCH_ASSOC);
-               if ($fetch_profile) {
-                  $farmer_name = $fetch_profile['name'];
-               }
-            }
-         ?>
-         <p><?= htmlspecialchars($farmer_name, ENT_QUOTES, 'UTF-8'); ?> (Farmer)</p>
-         
-         <a href="../components/farmer_logout.php" class="delete-btn" onclick="return confirm('Logout from the platform?');">logout</a> 
-      </div>
    </section>
 </header>
