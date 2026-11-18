@@ -702,6 +702,7 @@ section {
    width: 68%;
    max-width: 68%;
    min-width: 0;
+   height: clamp(16rem, 18vw, 22rem);
    display: flex;
    align-items: center;
    justify-content: center;
@@ -711,7 +712,7 @@ section {
 .home-bg .home .slide .image img {
    display: block;
    width: 100%;
-   height: auto;
+   height: 100%;
    object-fit: contain;
    object-position: center;
    filter: none;
@@ -740,35 +741,36 @@ section {
 
    .home-bg .home .slide {
       min-height: 0;
-      flex-direction: column;
-      gap: .8rem;
-      padding: .5rem 0 .8rem;
+      flex-direction: row;
+      gap: .6rem;
+      padding: .4rem 0;
    }
 
    .home-bg .home .slide .image {
-      flex: 0 1 auto;
-      width: min(80%, 44rem);
-      max-width: 80%;
-      align-self: center;
+      flex: 0 0 42%;
+      width: 42%;
+      max-width: 42%;
+      height: auto;
    }
 
    .home-bg .home .slide .content {
-      flex: 0 0 auto;
-      width: 100%;
+      flex: 1 1 58%;
+      width: 58%;
       text-align: center;
    }
 
    .home-bg .home .slide .content span {
-      margin-bottom: .6rem;
-      font-size: 1.6rem;
+      margin-bottom: .4rem;
+      font-size: 1.2rem;
    }
 
    .home-bg .home .slide .content h3 {
-      font-size: clamp(1.8rem, 4.6vw, 2.4rem);
+      font-size: clamp(1.4rem, 4vw, 1.8rem);
+      line-height: 1.15;
    }
 
    .home-bg .home .slide .content .btn {
-      margin-top: .7rem;
-      padding: .6rem 1.6rem;
+      margin-top: .4rem;
+      padding: .5rem 1rem;
    }
 }
