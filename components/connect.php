@@ -1,9 +1,10 @@
 <?php
-$db_host = '127.0.0.1';
-$db_port = 8889; // XAMPP MySQL port from /Applications/XAMPP/xamppfiles/etc/my.cnf
-$db_name = 'shop_db';
-$user_name = 'root';
-$user_password = '';   // XAMPP default is empty
+$db_config = require __DIR__ . "/db.local.php";
+$db_host = $db_config["host"];
+$db_port = $db_config["port"];
+$db_name = $db_config["name"];
+$user_name = $db_config["user"];
+$user_password = $db_config["password"];
 
 $dsn = "mysql:host={$db_host};port={$db_port};dbname={$db_name};charset=utf8mb4";
 
