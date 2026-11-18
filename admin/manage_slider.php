@@ -44,8 +44,8 @@ if (isset($_POST['add_slide'])) {
             $message[] = "Image ($image_name) must be a valid JPG, PNG, GIF, or WebP image.";
             continue;
          }
-         if (!is_dir($upload_dir) || !is_writable($upload_dir)) {
-            $message[] = 'The image upload folder is not writable by XAMPP.';
+         if (!is_dir($upload_dir)) {
+            $message[] = "The image upload folder is missing.";
             break;
          }
 
