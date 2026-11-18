@@ -1,7 +1,5 @@
 <?php
 
-include 'connect.php';
-
 session_start();
 
 // Unset all session variables
