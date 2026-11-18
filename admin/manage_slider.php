@@ -27,17 +27,12 @@ if (isset($_POST['add_slide'])) {
 
       for ($i = 0; $i < $total_files; $i++) {
          $image_name = $_FILES['images']['name'][$i] ?? 'image';
-         $image_size = (int) ($_FILES['images']['size'][$i] ?? 0);
          $image_tmp = $_FILES['images']['tmp_name'][$i] ?? '';
          $upload_error = $_FILES['images']['error'][$i] ?? UPLOAD_ERR_NO_FILE;
          $ext = strtolower(pathinfo($image_name, PATHINFO_EXTENSION));
 
          if ($upload_error !== UPLOAD_ERR_OK || !is_uploaded_file($image_tmp)) {
             $message[] = "Could not receive image ($image_name). Please try again.";
-            continue;
-         }
-         if ($image_size > 2000000) {
-            $message[] = "Image ($image_name) is larger than 2MB!";
             continue;
          }
          if (!in_array($ext, $allowed_extensions, true) || @getimagesize($image_tmp) === false) {
