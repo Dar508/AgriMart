@@ -38,7 +38,7 @@ include 'components/wishlist_cart.php';
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
    
    <!-- Custom CSS -->
-   <link rel="stylesheet" href="css/style.css?v=20261119-hero-mini">
+   <link rel="stylesheet" href="css/style.css?v=20261119-hero-artwork-68">
 </head>
 <body>
    
